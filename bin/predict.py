@@ -34,6 +34,16 @@ from saicinpainting.utils import register_debug_signal_handlers
 
 LOGGER = logging.getLogger(__name__)
 
+def construct_out_suffix(model_path):
+    """Construct the output path with the modified suffix based on the model path."""
+    # Extract the part of the model path after 'models/'
+    model_suffix = model_path.split('/models/')[-1]
+    
+    # Replace slashes with underscores and prepend 'out_' for the suffix
+    suffix = model_suffix.replace('/', '_')
+    suffix = suffix.replace('\\', '_')
+    
+    return f"_{suffix}"
 
 @hydra.main(config_path='../configs/prediction', config_name='default.yaml')
 def main(predict_config: OmegaConf):
@@ -41,7 +51,7 @@ def main(predict_config: OmegaConf):
         if sys.platform != 'win32':
             register_debug_signal_handlers()  # kill -10 <pid> will result in traceback dumped into log
 
-        device = torch.device("cpu")
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         train_config_path = os.path.join(predict_config.model.path, 'config.yaml')
         with open(train_config_path, 'r') as f:
@@ -55,7 +65,7 @@ def main(predict_config: OmegaConf):
         checkpoint_path = os.path.join(predict_config.model.path, 
                                        'models', 
                                        predict_config.model.checkpoint)
-        model = load_checkpoint(train_config, checkpoint_path, strict=False, map_location='cpu')
+        model = load_checkpoint(train_config, checkpoint_path, strict=False, map_location=device)
         model.freeze()
         if not predict_config.get('refine', False):
             model.to(device)
@@ -64,12 +74,17 @@ def main(predict_config: OmegaConf):
             predict_config.indir += '/'
 
         dataset = make_default_val_dataset(predict_config.indir, **predict_config.dataset)
+
+        out_suffix = construct_out_suffix(predict_config.model.path)
+
         for img_i in tqdm.trange(len(dataset)):
             mask_fname = dataset.mask_filenames[img_i]
+
             cur_out_fname = os.path.join(
                 predict_config.outdir, 
-                os.path.splitext(mask_fname[len(predict_config.indir):])[0] + out_ext
+                os.path.splitext(mask_fname[len(predict_config.indir):])[0] + out_suffix + out_ext
             )
+            tqdm.tqdm.write(f"processing to {cur_out_fname}")
             os.makedirs(os.path.dirname(cur_out_fname), exist_ok=True)
             batch = default_collate([dataset[img_i]])
             if predict_config.get('refine', False):

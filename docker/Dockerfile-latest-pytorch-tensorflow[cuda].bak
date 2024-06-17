@@ -1,0 +1,70 @@
+FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y wget mc tmux nano build-essential rsync libgl1
+
+ARG USERNAME=user
+RUN apt-get update && apt-get install -y \
+    wget \
+    git \
+    ca-certificates \
+    build-essential \
+    unzip \
+    zip \
+    dos2unix \
+    sudo && \
+    addgroup --gid 1000 $USERNAME && \
+    adduser --uid 1000 --gid 1000 --disabled-password --gecos '' $USERNAME && \
+    adduser $USERNAME sudo && \
+    echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME && \
+    USER=$USERNAME && \
+    GROUP=$USERNAME
+
+USER $USERNAME:$USERNAME
+WORKDIR "/home/$USERNAME"
+ENV PATH="/home/$USERNAME/miniconda3/bin:/home/$USERNAME/.local/bin:${PATH}"
+
+RUN git clone https://github.com/advimman/lama.git "/home/$USERNAME/lama"
+ENV PYTHONPATH="/home/$USERNAME/lama"
+ENV TORCH_HOME="/home/$USERNAME/lama"
+
+RUN wget -O /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py311_24.4.0-0-Linux-x86_64.sh && \
+    echo "7cb030a12d1da35e1c548344a895b108e0d2fbdc4f6b67d5180b2ac8539cc473 /tmp/miniconda.sh" > /tmp/miniconda.sh.sha256 && \
+    sha256sum --check --status < /tmp/miniconda.sh.sha256 && \
+    bash /tmp/miniconda.sh -bt -p "/home/$USERNAME/miniconda3" && \
+    rm /tmp/miniconda.sh && \
+    conda build purge && \
+    conda init
+
+RUN pip install -U pip
+RUN pip install numpy scipy opencv-python-headless tensorflow[and-cuda] joblib matplotlib pandas \
+    albumentations==0.5.2 pytorch-lightning==1.2.9 tabulate easydict==1.9.0 kornia==0.5.0 webdataset \
+    packaging gpustat tqdm pyyaml hydra-core==1.1.0.dev6 scikit-learn tabulate
+RUN pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/lts/1.8/cu111
+RUN pip install scikit-image
+
+ENV USER=user
+
+# overlay modifications over git repo lama
+COPY lama/data256x256.zip "/home/$USERNAME/lama/data256x256.zip" 
+
+RUN rm "/home/$USERNAME/lama/bin/predict.py"
+COPY lama/bin/predict.py "/home/$USERNAME/lama/bin/predict.py"
+RUN sudo dos2unix "/home/$USERNAME/lama/bin/predict.py"
+
+RUN rm "/home/$USERNAME/lama/bin/train.py"
+COPY lama/bin/train.py "/home/$USERNAME/lama/bin/train.py"
+RUN sudo dos2unix "/home/$USERNAME/lama/bin/train.py"
+
+RUN rm "/home/$USERNAME/lama/fetch_data/celebahq_dataset_prepare.sh"
+COPY lama/fetch_data/celebahq_dataset_prepare.sh "/home/$USERNAME/lama/fetch_data/celebahq_dataset_prepare.sh"
+RUN sudo dos2unix "/home/$USERNAME/lama/fetch_data/celebahq_dataset_prepare.sh"
+
+RUN rm -Rf "/home/$USERNAME/lama/configs"
+COPY lama/configs "/home/$USERNAME/lama/configs"
+RUN for i in `find /home/user/lama/configs/ -type f`; do sudo dos2unix $i; done
+
+COPY lama/cuda_is_available.py "/home/$USERNAME/lama/cuda_is_available.py"
+RUN sudo dos2unix "/home/$USERNAME/lama/cuda_is_available.py"

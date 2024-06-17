@@ -135,3 +135,13 @@ dmypy.json
 .vscode/
 ## vim
 *.sw?
+
+experiments/
+dataset/
+models/models/
+outputs/
+paper_data/
+celeba-hq-dataset/
+hub/
+docker/lama/
+ade20k/

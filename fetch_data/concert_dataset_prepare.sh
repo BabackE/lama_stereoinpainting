@@ -1,0 +1,32 @@
+# Split: split train -> train & val
+echo creating random set
+cat concert/fetch_lists/train_shuffled.flist | shuf > concert/train/temp_train_shuffled.flist
+cat concert/train/temp_train_shuffled.flist | head -n 2000 > concert/train/val_shuffled.flist
+cat concert/train/temp_train_shuffled.flist | tail -n +2001 > concert/train/train_shuffled.flist
+cat concert/fetch_lists/val_shuffled.flist > concert/train/visual_test_shuffled.flist
+
+mkdir concert/train/train_256/
+mkdir concert/train/val_source_256/
+mkdir concert/train/visual_test_source_256/
+
+echo moving images into assigned buckets
+cat concert/train/train_shuffled.flist | xargs -I {} mv concert/train/1080p/{} concert/train/train_256/
+cat concert/train/val_shuffled.flist | xargs -I {} mv concert/train/1080p/{} concert/train/val_source_256/
+cat concert/train/visual_test_shuffled.flist | xargs -I {} mv concert/train/1080p/{} concert/train/visual_test_source_256/
+
+echo creating training scripts
+
+# create location config concert.yaml
+PWD=$(pwd)
+DATASET=${PWD}/concert/train
+CONCERT_DST=${PWD}/configs/training/location/concert.yaml
+CONCERT_SRC=${PWD}/concert/concert.yaml
+
+touch $CONCERT_SRC
+echo "# @package _group_" >> $CONCERT_SRC
+echo "data_root_dir: ${DATASET}/" >> $CONCERT_SRC
+echo "out_root_dir: ${PWD}/experiments/" >> $CONCERT_SRC
+echo "tb_dir: ${PWD}/outputs/tb_logs/" >> $CONCERT_SRC
+echo "pretrained_models: ${PWD}/" >> $CONCERT_SRC
+
+sudo cp $CONCERT_SRC $CONCERT_DST

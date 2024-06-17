@@ -4,6 +4,13 @@ import logging
 import os
 import sys
 import traceback
+import torch
+import tensorflow as tf
+
+print(f"cuda={torch.cuda.is_available()}")
+print(f"nccl={torch.cuda.nccl.version()}")
+print(f"tensorflow={tf.config.list_physical_devices('GPU')}")
+
 
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
@@ -28,6 +35,7 @@ LOGGER = logging.getLogger(__name__)
 @handle_ddp_subprocess()
 @hydra.main(config_path='../configs/training', config_name='tiny_test.yaml')
 def main(config: OmegaConf):
+
     try:
         need_set_deterministic = handle_deterministic_config(config)
 

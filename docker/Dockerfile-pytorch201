@@ -1,0 +1,63 @@
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Preconfigure tzdata
+ENV DEBIAN_FRONTEND=noninteractive
+RUN echo 'tzdata tzdata/Areas select America' | debconf-set-selections
+RUN echo 'tzdata tzdata/Zones/America select Los_Angeles' | debconf-set-selections
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y wget mc tmux nano build-essential rsync libgl1 git ca-certificates unzip zip dos2unix libgl1-mesa-glx && \
+    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libglib2.0-0
+
+ARG USERNAME=user
+ENV USER=$USERNAME
+RUN apt-get update && apt-get install -y \
+    sudo && \
+    addgroup --gid 1000 $USERNAME && \
+    adduser --uid 1000 --gid 1000 --disabled-password --gecos '' $USERNAME && \
+    adduser $USERNAME sudo && \
+    echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME && \
+    USER=$USERNAME && \
+    GROUP=$USERNAME
+
+USER $USERNAME:$USERNAME
+WORKDIR "/home/$USERNAME"
+ENV PATH="/home/$USERNAME/miniconda3/bin:/home/$USERNAME/.local/bin:${PATH}"
+
+RUN git clone https://github.com/advimman/lama.git "/home/$USERNAME/lama"
+ENV PYTHONPATH="/home/$USERNAME/lama"
+ENV TORCH_HOME="/home/$USERNAME/lama"
+
+RUN python -m pip install --upgrade pip && \
+    pip install -U pip numpy scipy torchvision tensorflow joblib matplotlib pandas \
+    pytorch-lightning==1.2.9 tabulate easydict==1.10 kornia==0.5.0 webdataset \
+    packaging gpustat tqdm pyyaml hydra-core==1.1.0.dev6 scikit-learn==1.3.1 tabulate
+RUN pip install scikit-image==0.22.0 torchtext==0.6.0 albumentations==0.5.2 opencv-python-headless==4.8.1.78
+
+# overlay modifications over git repo lama
+COPY lama/data256x256.zip "/home/$USERNAME/lama/data256x256.zip" 
+
+RUN rm "/home/$USERNAME/lama/bin/predict.py"
+COPY lama/bin/predict.py "/home/$USERNAME/lama/bin/predict.py"
+RUN sudo dos2unix "/home/$USERNAME/lama/bin/predict.py"
+
+RUN rm "/home/$USERNAME/lama/bin/train.py"
+COPY lama/bin/train.py "/home/$USERNAME/lama/bin/train.py"
+RUN sudo dos2unix "/home/$USERNAME/lama/bin/train.py"
+
+RUN rm "/home/$USERNAME/lama/fetch_data/celebahq_dataset_prepare.sh"
+COPY lama/fetch_data/celebahq_dataset_prepare.sh "/home/$USERNAME/lama/fetch_data/celebahq_dataset_prepare.sh"
+RUN sudo dos2unix "/home/$USERNAME/lama/fetch_data/celebahq_dataset_prepare.sh"
+
+RUN rm -Rf "/home/$USERNAME/lama/configs"
+COPY lama/configs "/home/$USERNAME/lama/configs"
+RUN for i in `find /home/user/lama/configs/ -type f`; do sudo dos2unix $i; done
+
+COPY lama/cuda_is_available.py "/home/$USERNAME/lama/cuda_is_available.py"
+RUN sudo dos2unix "/home/$USERNAME/lama/cuda_is_available.py"

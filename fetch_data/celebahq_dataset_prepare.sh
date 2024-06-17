@@ -5,6 +5,7 @@ unzip data256x256.zip -d celeba-hq-dataset/
 # Reindex
 for i in `echo {00001..30000}`
 do
+    echo $i.jpg
     mv 'celeba-hq-dataset/data256x256/'$i'.jpg' 'celeba-hq-dataset/data256x256/'$[10#$i - 1]'.jpg'
 done
 
@@ -33,5 +34,5 @@ touch $CELEBA
 echo "# @package _group_" >> $CELEBA
 echo "data_root_dir: ${DATASET}/" >> $CELEBA
 echo "out_root_dir: ${PWD}/experiments/" >> $CELEBA
-echo "tb_dir: ${PWD}/tb_logs/" >> $CELEBA
+echo "tb_dir: ${PWD}/outputs/tb_logs/" >> $CELEBA
 echo "pretrained_models: ${PWD}/" >> $CELEBA
