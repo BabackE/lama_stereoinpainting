@@ -1,1 +1,0 @@
-export TORCH_HOME=$(pwd) && export PYTHONPATH=$(pwd)

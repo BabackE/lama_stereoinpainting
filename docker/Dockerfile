@@ -43,6 +43,7 @@ RUN pip install -U pip numpy scipy joblib matplotlib pandas pytorch-lightning==1
 RUN pip install scikit-image==0.22.0 torchtext==0.6.0 albumentations==0.5.2 opencv-python-headless==4.8.1.78
 
 # get the lama repo
+ADD "https://api.github.com/repos/BabackE/lama_stereoinpainting/commits?per_page=1" latest_commit
 RUN git clone https://github.com/BabackE/lama_stereoinpainting.git "/home/$USERNAME/lama"
 ENV PYTHONPATH="/home/$USERNAME/lama"
 ENV TORCH_HOME="/home/$USERNAME/lama"
