@@ -6,7 +6,7 @@ kwargs:
   gradient_clip_val: 1
   log_gpu_memory: None
   limit_train_batches: 24000
-  val_check_interval: 1229
+  val_check_interval: 2458
   log_every_n_steps: 250
   precision: 32
   terminate_on_nan: False
