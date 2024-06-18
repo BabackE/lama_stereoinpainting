@@ -9,4 +9,4 @@ docker run --gpus all -it --rm --shm-size=8gb --env="DISPLAY" ^
 --volume="%SRCDIR%\outputs":/home/user/lama/outputs ^
 --volume="%SRCDIR%\models\models":/home/user/lama/models/models ^
 --volume="%SRCDIR%\hub":/home/user/lama/hub ^
--it --name="lama" --rm --shm-size=8gb --env="DISPLAY" lama /bin/bash
+--name="lama" lama /bin/bash
