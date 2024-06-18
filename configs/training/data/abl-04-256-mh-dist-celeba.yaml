@@ -1,7 +1,7 @@
 # @package _group_
 
-batch_size: 1 # was 5
-val_batch_size: 1 # was 3
+batch_size: 5
+val_batch_size: 3
 num_workers: 3
 
 train:
