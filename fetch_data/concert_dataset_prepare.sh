@@ -10,9 +10,9 @@ mkdir concert/train256/val_source_256/
 mkdir concert/train256/visual_test_source_256/
 
 echo moving images into assigned buckets
-cat concert/train256/train_shuffled.flist | xargs -I {} mv concert/train256/1080p/{} concert/train256/train_256/
-cat concert/train256/val_shuffled.flist | xargs -I {} mv concert/train256/1080p/{} concert/train256/val_source_256/
-cat concert/train256/visual_test_shuffled.flist | xargs -I {} mv concert/train256/1080p/{} concert/train256/visual_test_source_256/
+cat concert/train256/train_shuffled.flist | xargs -I {} mv concert/train256/256/{} concert/train256/train_256/
+cat concert/train256/val_shuffled.flist | xargs -I {} mv concert/train256/256/{} concert/train256/val_source_256/
+cat concert/train256/visual_test_shuffled.flist | xargs -I {} mv concert/train256/256/{} concert/train256/visual_test_source_256/
 
 echo creating training scripts
 
