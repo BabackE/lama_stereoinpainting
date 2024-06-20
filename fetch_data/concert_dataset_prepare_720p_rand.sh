@@ -13,7 +13,7 @@ mkdir $TRAINING_ROOT/val_source_$DATASET_SUFFIX/
 mkdir $TRAINING_ROOT/visual_test_source_$DATASET_SUFFIX/
 
 echo moving images into assigned buckets
-cat $TRAINING_ROOT/train_shuffled.flist | xargs -I {} mv $TRAINING_ROOT/{$DATASET_SUFFIX}/{} $TRAINING_ROOT/train_$DATASET_SUFFIX/
+cat $TRAINING_ROOT/train_shuffled.flist | xargs -I {} mv $TRAINING_ROOT/$DATASET_SUFFIX/{} $TRAINING_ROOT/train_$DATASET_SUFFIX/
 cat $TRAINING_ROOT/val_shuffled.flist | xargs -I {} mv $TRAINING_ROOT/$DATASET_SUFFIX/{} $TRAINING_ROOT/val_source_$DATASET_SUFFIX/
 cat $TRAINING_ROOT/visual_test_shuffled.flist | xargs -I {} mv $TRAINING_ROOT/$DATASET_SUFFIX/{} $TRAINING_ROOT/visual_test_source_$DATASET_SUFFIX/
 
