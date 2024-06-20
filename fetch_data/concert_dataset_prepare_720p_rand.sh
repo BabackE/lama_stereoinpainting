@@ -13,8 +13,11 @@ mkdir $TRAINING_ROOT/val_source_$DATASET_SUFFIX/
 mkdir $TRAINING_ROOT/visual_test_source_$DATASET_SUFFIX/
 
 echo moving images into assigned buckets
+echo training set
 cat $TRAINING_ROOT/train_shuffled.flist | xargs -I {} mv $TRAINING_ROOT/$DATASET_SUFFIX/{} $TRAINING_ROOT/train_$DATASET_SUFFIX/
+echo val set
 cat $TRAINING_ROOT/val_shuffled.flist | xargs -I {} mv $TRAINING_ROOT/$DATASET_SUFFIX/{} $TRAINING_ROOT/val_source_$DATASET_SUFFIX/
+echo visual test set
 cat $TRAINING_ROOT/visual_test_shuffled.flist | xargs -I {} mv $TRAINING_ROOT/$DATASET_SUFFIX/{} $TRAINING_ROOT/visual_test_source_$DATASET_SUFFIX/
 
 echo creating training scripts
@@ -22,8 +25,8 @@ echo creating training scripts
 # create location config concert.yaml
 PWD=$(pwd)
 DATASET=${PWD}/$TRAINING_ROOT
-CONCERT_DST=${PWD}/configs/training/location/concert_$DATASET_SUFFIX_rand.yaml
-CONCERT_SRC=${PWD}/concert/concert_$DATASET_SUFFIX_rand.yaml
+CONCERT_DST=${PWD}/configs/training/location/concert_{$DATASET_SUFFIX}_rand.yaml
+CONCERT_SRC=${PWD}/concert/concert_{$DATASET_SUFFIX}_rand.yaml
 
 touch $CONCERT_SRC
 echo "# @package _group_" >> $CONCERT_SRC
