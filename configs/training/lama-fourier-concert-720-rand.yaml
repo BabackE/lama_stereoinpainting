@@ -24,12 +24,12 @@ losses:
     weights_path: ${env:TORCH_HOME}
 
 defaults:
-  - location: concert
-  - data: abl-04-256-mh-dist-celeba
+  - location: concert_720_rand
+  - data: abl-04-256-mh-dist-concert-720
   - generator: ffc_resnet_075
   - discriminator: pix2pixhd_nlayer
   - optimizers: default_optimizers
   - visualizer: directory
   - evaluator: default_inpainted
-  - trainer: any_gpu_large_ssim_ddp_final_concert
+  - trainer: any_gpu_large_ssim_ddp_final_concert_720_rand
   - hydra: overrides

@@ -1,0 +1,28 @@
+I summed up the experience above and trained big-lama like this. If I made any mistakes, please correct me.
+1.modified pytorch_lightning/trainer/connectors/checkpoint_connector.py Line 106:
+https://github.com/PyTorchLightning/pytorch-lightning/blob/f9f4853f3663404362c7de8614a504b0403c25b8/pytorch_lightning/trainer/connectors/checkpoint_connector.py#L106
+
+        # restore training state
+        self.restore_training_state(checkpoint)
+to
+
+        # restore training state
+        try:
+            self.restore_training_state(checkpoint)
+        except KeyError:
+            rank_zero_warn(
+                "File at `resume_from_checkpoint` Trying to restore training state but checkpoint contains only the model."
+            )
+2.modified lama-main/saicinpainting/training/trainers/base.py Line 109:
+
+            if self.config.losses.get("resnet_pl", {"weight": 0})['weight'] > 0:
+                self.loss_resnet_pl = ResNetPL(**self.config.losses.resnet_pl)
+to
+
+            if self.config.losses.get("sege_pl", {"weight": 0})['weight'] > 0:
+                self.loss_sege_pl = ResNetPL(**self.config.losses.sege_pl)
+3.run
+
+python bin/train.py -cn big-lama location=my_dataset data.batch_size=10 +trainer.kwargs.resume_from_checkpoint=abspath\\to\\big-lama-with-discr-remove-loss_segm_pl.ckpt
+https://drive.google.com/file/d/1YTiKZ1hQnKvTEbXIxFXjGg61pBAch_N7/view?usp=sharing
+model shared by @Liang-Sen

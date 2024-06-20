@@ -1,0 +1,2 @@
+You can reference your resume checkpoint in the config e.g. "/lama/configs/training/trainer/any_gpu_large_ssim_ddp_final.yaml"
+kwargs: resume_from_checkpoint:  <absolute path to your chk file>
