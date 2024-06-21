@@ -25,7 +25,7 @@ losses:
 
 defaults:
   - location: concert_720_rand
-  - data: abl-04-256-mh-dist-concert-720
+  - data: abl-04-256-mh-dist-concert-720_rand
   - generator: ffc_resnet_075
   - discriminator: pix2pixhd_nlayer
   - optimizers: default_optimizers

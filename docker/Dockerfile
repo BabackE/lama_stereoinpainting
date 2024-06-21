@@ -42,6 +42,9 @@ RUN pip install -U tensorflow==2.14.0
 RUN pip install -U pip numpy scipy joblib matplotlib pandas pytorch-lightning==1.2.9 tabulate easydict==1.10 kornia==0.5.0 webdataset packaging gpustat tqdm pyyaml hydra-core==1.1.0.dev6 scikit-learn==1.3.1 tabulate
 RUN pip install scikit-image==0.22.0 torchtext==0.6.0 albumentations==0.5.2 opencv-python-headless==4.8.1.78
 
+# copy the concert data
+COPY concert /home/user/lama/concert
+
 # get the lama repo
 ADD "https://api.github.com/repos/BabackE/lama_stereoinpainting/commits?per_page=1" latest_commit
 RUN git clone https://github.com/BabackE/lama_stereoinpainting.git "/home/$USERNAME/lama"
