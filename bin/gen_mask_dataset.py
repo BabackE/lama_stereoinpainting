@@ -12,6 +12,7 @@ from joblib import Parallel, delayed
 from saicinpainting.evaluation.masks.mask import SegmentationMask, propose_random_square_crop
 from saicinpainting.evaluation.utils import load_yaml, SmallMode
 from saicinpainting.training.data.masks import MixedMaskGenerator
+from saicinpainting.training.data.cacheddisocclusionmasks import CachedDisocclusionMaskGenerator
 
 
 class MakeManyMasksWrapper:
@@ -31,6 +32,8 @@ def process_images(src_images, indir, outdir, config):
         variants_n = config.mask_generator_kwargs.pop('variants_n', 2)
         mask_generator = MakeManyMasksWrapper(MixedMaskGenerator(**config.mask_generator_kwargs),
                                               variants_n=variants_n)
+    elif config.generator.kind == 'disocclusion':
+        mask_generator = CachedDisocclusionMaskGenerator(**config.mask_generator_kwargs)
     else:
         raise ValueError(f'Unexpected generator kind: {config.generator_kind}')
 
@@ -59,7 +62,10 @@ def process_images(src_images, indir, outdir, config):
                 image = image.resize(out_size, resample=Image.BICUBIC)
 
             # generate and select masks
-            src_masks = mask_generator.get_masks(image)
+            if (config.generate.kind != 'disocclusion'):
+                src_masks = mask_generator.get_masks(image)
+            else:
+                src_images = [mask_generator(infile)]
 
             filtered_image_mask_pairs = []
             for cur_mask in src_masks:

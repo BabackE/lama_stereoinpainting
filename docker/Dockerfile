@@ -43,7 +43,8 @@ RUN pip install -U pip numpy scipy joblib matplotlib pandas pytorch-lightning==1
 RUN pip install scikit-image==0.22.0 torchtext==0.6.0 albumentations==0.5.2 opencv-python-headless==4.8.1.78
 
 # copy the concert data
-COPY concert /home/user/concert_data
+#COPY concert /home/user/concert_data
+#RUN ln -s /home/user/concert_data /home/user/lama/concert
 
 # get the lama repo
 ADD "https://api.github.com/repos/BabackE/lama_stereoinpainting/commits?per_page=1" latest_commit
@@ -52,4 +53,4 @@ ENV PYTHONPATH="/home/$USERNAME/lama"
 ENV TORCH_HOME="/home/$USERNAME/lama"
 ENV USER=$USERNAME
 
-RUN ln -s /home/user/concert_data /home/user/lama/concert
+
