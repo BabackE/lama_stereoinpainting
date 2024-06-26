@@ -1,7 +1,19 @@
 generator_kind: disocclusion
 
 mask_generator_kwargs:
-  disocclusion_proba: 1
+  irregular_kwargs:
+    min_times: 1
+    max_times: 5
+    max_width: 500
+    max_angle: 4
+    max_len: 200
+
+  box_kwargs:
+    margin: 10
+    bbox_min_size: 84
+    bbox_max_size: 421
+    max_times: 6
+    min_times: 1
 
 max_masks_per_image: 1
 

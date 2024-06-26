@@ -32,7 +32,7 @@ def process_images(src_images, indir, outdir, config):
         variants_n = config.mask_generator_kwargs.pop('variants_n', 2)
         mask_generator = MakeManyMasksWrapper(MixedMaskGenerator(**config.mask_generator_kwargs),
                                               variants_n=variants_n)
-    elif config.generator.kind == 'disocclusion':
+    elif config.generator_kind == 'disocclusion':
         mask_generator = CachedDisocclusionMaskGenerator(**config.mask_generator_kwargs)
     else:
         raise ValueError(f'Unexpected generator kind: {config.generator_kind}')
