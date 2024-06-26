@@ -25,8 +25,8 @@ echo creating training scripts
 # create location config concert.yaml
 PWD=$(pwd)
 DATASET=${PWD}/$TRAINING_ROOT
-CONCERT_DST=${PWD}/configs/training/location/concert_{$DATASET_SUFFIX}_rand.yaml
-CONCERT_SRC=${PWD}/concert/concert_{$DATASET_SUFFIX}_rand.yaml
+CONCERT_DST=${PWD}/configs/training/location/concert_{$DATASET_SUFFIX}.yaml
+CONCERT_SRC=${PWD}/concert/concert_{$DATASET_SUFFIX}.yaml
 
 touch $CONCERT_SRC
 echo "# @package _group_" >> $CONCERT_SRC
