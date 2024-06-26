@@ -46,9 +46,8 @@ class InpaintingTrainDataset(Dataset):
                     mask=mask)
 
 class DisocclusionTrainDataset(InpaintingTrainDataset):
-    def __init__(self, indir, transform, mask_kwargs):
+    def __init__(self, indir, transform):
         super().__init__(indir, transform)
-        self.mask_kwargs = mask_kwargs
         self.mask_generator = CachedDisocclusionMaskGenerator()
 
     def __getitem__(self, item):
@@ -234,7 +233,6 @@ def make_default_train_dataloader(indir, kind='default', out_size=512, mask_gen_
         if (mask_generator_kind == 'disocclusion'):
             dataset = DisocclusionTrainDataset(indir=indir,
                                                 transform=transform,
-                                                mask_kwargs=mask_gen_kwargs
                                                 **kwargs)
         else:
             dataset = InpaintingTrainDataset(indir=indir,
