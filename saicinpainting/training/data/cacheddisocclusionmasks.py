@@ -67,7 +67,7 @@ class CachedDisocclusionMaskGenerator:
 
 
     def create_selected_mask(self, img_path, selected_disocclusion_type, selected_depthcutoff_type, iter_i=-1):
-        LOGGER.info(f"[DisocclusionMask {iter_i}]: \ndisocclusion_type = {selected_disocclusion_type}\n depth_cutoff_type = {selected_depthcutoff_type}\n random_masks= {self.combine_with_random_masks}")
+        LOGGER.info(f"[{os.path.basename(img_path)} {iter_i}]: disocclusion_type = {selected_disocclusion_type} depth_cutoff_type = {selected_depthcutoff_type} random_masks= {self.combine_with_random_masks}")
 
         # load the type of mask we want to use
         selected_disocclusion_mask = 0

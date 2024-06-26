@@ -8,7 +8,7 @@ train:
   indir: ${location.data_root_dir}/train_disocclusion_720
   out_size: 720
   mask_generator_kind: disocclusion
-  mask_gen_kwargs:  # probabilities do not need to sum to 1, they are re-normalized in mask generator
+  mask_gen_kwargs:  # CachedDisoclusionMaskGenerator makes up its own probabilities for random masks, so it only takes kwargs
     irregular_kwargs:
       min_times: 1
       max_times: 5
