@@ -1,0 +1,5 @@
+# @package _group_
+data_root_dir: /home/user/lama/concert/train_720_disocclusion/
+out_root_dir: /home/user/lama/experiments/
+tb_dir: /home/user/lama/outputs/tb_logs/
+pretrained_models: /home/user/lama/

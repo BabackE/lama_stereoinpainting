@@ -1,0 +1,14 @@
+generator_kind: disocclusion
+
+mask_generator_kwargs:
+  disocclusion_proba: 1
+
+max_masks_per_image: 1
+
+cropping:
+  out_min_size: 720
+  handle_small_mode: upscale
+  out_square_crop: False
+  crop_min_overlap: 1
+
+max_tamper_area: 0.5
