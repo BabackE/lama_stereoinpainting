@@ -18,7 +18,7 @@ from saicinpainting.evaluation.data import InpaintingDataset as InpaintingEvalua
     OurInpaintingDataset as OurInpaintingEvaluationDataset, ceil_modulo, InpaintingEvalOnlineDataset
 from saicinpainting.training.data.aug import IAAAffine2, IAAPerspective2
 from saicinpainting.training.data.masks import get_mask_generator
-from saicinpainting.training.data.disocclusionmask import DisocclusionMaskGenerator
+from saicinpainting.training.data.cacheddisocclusionmasks import CachedDisocclusionMaskGenerator
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,39 +49,18 @@ class DisocclusionTrainDataset(InpaintingTrainDataset):
     def __init__(self, indir, transform, mask_kwargs):
         super().__init__(indir, transform)
         self.mask_kwargs = mask_kwargs
-
-    def get_rawdepth_path_from_img_path(self, path):
-        # Split the original path to get directory and filename
-        dir_name, file_name = os.path.split(path)
-        
-        # Remove the last directory (train_set) and add 'occlusions'
-        new_dir_name = os.path.join(os.path.dirname(dir_name), 'rawdepth')
-        
-        # Change the file extension and append '_rawdepth.png'
-        new_file_name = os.path.splitext(file_name)[0] + '_rawdepth.png'
-        
-        # Construct the new path
-        depth_path = os.path.join(new_dir_name, new_file_name)
-
-        if (not os.path.exists(depth_path)):
-            import sys
-            LOGGER.error(f"Disparity Mask Not Found: {depth_path}")
-            sys.exit(-1)
-        
-        return depth_path
+        self.mask_generator = CachedDisocclusionMaskGenerator()
 
     def __getitem__(self, item):
         path = self.in_files[item]
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        
-        # load the diparity map and create a disoclussion map with it:
-        mask_generator = DisocclusionMaskGenerator()
-        raw_depth = cv2.imread(self.get_rawdepth_path_from_img_path(path), -1)
-        mask = mask_generator(img, raw_depth, iter_i=self.iter_i).astype(np.float32) / 255.0
-
         img = self.transform(image=img)['image']
         img = np.transpose(img, (2, 0, 1))
+        
+        # create a disoclussion map from cached disocclusion and disparity maps
+        mask = self.mask_generator(path, iter_i=self.iter_i)
+
         self.iter_i += 1
         return dict(image=img,
                     mask=mask)    
@@ -252,15 +231,16 @@ def make_default_train_dataloader(indir, kind='default', out_size=512, mask_gen_
     transform = get_transforms(transform_variant, out_size)
 
     if kind == 'default':
-        dataset = InpaintingTrainDataset(indir=indir,
-                                         mask_generator=mask_generator,
-                                         transform=transform,
-                                         **kwargs)
-    elif kind == 'disocclusion':
-        dataset = DisocclusionTrainDataset(indir=indir,
-                                            transform=transform,
-                                            mask_kwargs=mask_gen_kwargs
-                                            **kwargs)
+        if (mask_generator_kind == 'disocclusion'):
+            dataset = DisocclusionTrainDataset(indir=indir,
+                                                transform=transform,
+                                                mask_kwargs=mask_gen_kwargs
+                                                **kwargs)
+        else:
+            dataset = InpaintingTrainDataset(indir=indir,
+                                             mask_generator=mask_generator,
+                                             transform=transform,
+                                             **kwargs)
     elif kind == 'default_web':
         dataset = InpaintingTrainWebDataset(indir=indir,
                                             mask_generator=mask_generator,

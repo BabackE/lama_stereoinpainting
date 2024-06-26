@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 
 from saicinpainting.evaluation.masks.mask import SegmentationMask
+from saicinpainting.training.data.cacheddisocclusionmasks import CachedDisocclusionMaskGenerator
 from saicinpainting.utils import LinearRamp
 
 LOGGER = logging.getLogger(__name__)
@@ -327,6 +328,8 @@ def get_mask_generator(kind, kwargs):
         cl = OutpaintingMaskGenerator
     elif kind == "dumb":
         cl = DumbAreaMaskGenerator
+    elif kind =="disocclusion":
+        cl = CachedDisocclusionMaskGenerator
     else:
         raise NotImplementedError(f"No such generator kind = {kind}")
     return cl(**kwargs)

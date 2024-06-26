@@ -1,0 +1,44 @@
+# @package _group_
+
+batch_size: 2
+val_batch_size: 2
+num_workers: 3
+
+train:
+  indir: ${location.data_root_dir}/train_disocclusion_720
+  out_size: 720
+  maskmask_generator_kind: disocclusion
+  mask_gen_kwargs:  # probabilities do not need to sum to 1, they are re-normalized in mask generator
+    irregular_proba: 1
+    irregular_kwargs:
+      min_times: 1
+      max_times: 5
+      max_width: 500
+      max_angle: 4
+      max_len: 200
+
+    box_proba: 1
+    box_kwargs:
+      margin: 10
+      bbox_min_size: 84
+      bbox_max_size: 421
+      max_times: 6
+      min_times: 1
+
+    segm_proba: 0
+
+  transform_variant: no_augs
+  dataloader_kwargs:
+    batch_size: ${data.batch_size}
+    shuffle: True
+    num_workers: ${data.num_workers}
+
+val:
+  indir: ${location.data_root_dir}/val_disocclusion_720
+  img_suffix: .png
+  dataloader_kwargs:
+    batch_size: ${data.val_batch_size}
+    shuffle: False
+    num_workers: ${data.num_workers}
+
+visual_test: null
