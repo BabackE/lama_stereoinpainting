@@ -9,7 +9,6 @@ train:
   out_size: 720
   mask_generator_kind: disocclusion
   mask_gen_kwargs:  # probabilities do not need to sum to 1, they are re-normalized in mask generator
-    irregular_proba: 1
     irregular_kwargs:
       min_times: 1
       max_times: 5
@@ -17,15 +16,12 @@ train:
       max_angle: 4
       max_len: 200
 
-    box_proba: 1
     box_kwargs:
       margin: 10
       bbox_min_size: 84
       bbox_max_size: 421
       max_times: 6
       min_times: 1
-
-    segm_proba: 0
 
   transform_variant: no_augs
   dataloader_kwargs:
