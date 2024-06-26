@@ -8,8 +8,6 @@ import sys
 
 LOGGER = logging.getLogger(__name__)
 
-from saicinpainting.training.data.masks import MixedMaskGenerator
-
 DEFAULT_IRREGULAR_KWARGS = {
     "max_angle": 4,
     "max_len": 200,
@@ -101,6 +99,7 @@ class CachedDisocclusionMaskGenerator:
         selected_disocclusion_mask = np.expand_dims(selected_disocclusion_mask, axis=0)
 
         if (self.combine_with_random_masks):
+            from saicinpainting.training.data.masks import MixedMaskGenerator
             mask_generator = MixedMaskGenerator(box_proba=1, segm_proba=0, irregular_proba=1, irregular_kwargs=self.irregular_kwargs, box_kwargs=self.box_kwargs)
             random_masks = mask_generator(selected_disocclusion_mask)
             selected_disocclusion_mask = cv2.bitwise_or(selected_disocclusion_mask, random_masks)
