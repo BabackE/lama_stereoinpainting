@@ -9,6 +9,8 @@ import PIL.Image as Image
 import numpy as np
 from joblib import Parallel, delayed
 
+import sys
+sys.path.append('d:/dev/lama_stereoinpainting')
 from saicinpainting.evaluation.masks.mask import SegmentationMask, propose_random_square_crop
 from saicinpainting.evaluation.utils import load_yaml, SmallMode
 from saicinpainting.training.data.masks import MixedMaskGenerator
@@ -62,10 +64,10 @@ def process_images(src_images, indir, outdir, config):
                 image = image.resize(out_size, resample=Image.BICUBIC)
 
             # generate and select masks
-            if (config.generate.kind != 'disocclusion'):
+            if (config.generator_kind != 'disocclusion'):
                 src_masks = mask_generator.get_masks(image)
             else:
-                src_images = [mask_generator(infile)]
+                src_masks = [mask_generator(infile)[0]]
 
             filtered_image_mask_pairs = []
             for cur_mask in src_masks:
