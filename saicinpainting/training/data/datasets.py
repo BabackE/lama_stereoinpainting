@@ -47,7 +47,7 @@ class InpaintingTrainDataset(Dataset):
 
 class DisocclusionTrainDataset(InpaintingTrainDataset):
     def __init__(self, indir, transform):
-        super().__init__(indir, transform)
+        super().__init__(indir=indir, mask_generator=None, transform=transform)
         self.mask_generator = CachedDisocclusionMaskGenerator()
 
     def __getitem__(self, item):
