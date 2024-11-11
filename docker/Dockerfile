@@ -39,12 +39,11 @@ RUN wget -O /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py3
 RUN pip install -U pip
 RUN pip install torch==2.0.1 torchvision==0.15.2
 RUN pip install -U tensorflow==2.14.0
-RUN pip install -U pip numpy scipy joblib matplotlib pandas pytorch-lightning==1.2.9 tabulate easydict==1.10 kornia==0.5.0 webdataset packaging gpustat tqdm pyyaml hydra-core==1.1.0.dev6 scikit-learn==1.3.1 tabulate
+RUN pip install -U pip numpy scipy joblib matplotlib pandas pytorch-lightning==1.2.9 tabulate easydict==1.10 kornia==0.5.0 webdataset packaging gpustat tqdm pyyaml hydra-core==1.1.0 scikit-learn==1.3.1 tabulate
 RUN pip install scikit-image==0.22.0 torchtext==0.6.0 albumentations==0.5.2 opencv-python-headless==4.8.1.78
 
 # copy the concert data
 #COPY concert /home/user/concert_data
-#RUN ln -s /home/user/concert_data /home/user/lama/concert
 
 # get the lama repo
 ADD "https://api.github.com/repos/BabackE/lama_stereoinpainting/commits?per_page=1" latest_commit
@@ -53,4 +52,5 @@ ENV PYTHONPATH="/home/$USERNAME/lama"
 ENV TORCH_HOME="/home/$USERNAME/lama"
 ENV USER=$USERNAME
 
-
+# this must be done after git is pulled to create the lama folder
+RUN ln -s /home/user/concert_data /home/user/lama/concert

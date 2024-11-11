@@ -63,10 +63,10 @@ if __name__ == '__main__':
     import argparse
 
     aparser = argparse.ArgumentParser()
-    aparser.add_argument('indir',
+    aparser.add_argument('--indir',
                          help='Path to directory with output of training '
                               '(i.e. directory, which has samples, modules, config.yaml and train.log')
-    aparser.add_argument('outdir',
+    aparser.add_argument('--outdir',
                          help='Where to put minimal checkpoint, which can be consumed by "bin/predict.py"')
     aparser.add_argument('--epochs', type=str, default='last',
                          help='Which checkpoint to take. '
