@@ -15,10 +15,11 @@ from skimage.transform import rescale, resize
 from torch.utils.data import Dataset, IterableDataset, DataLoader, DistributedSampler, ConcatDataset
 
 from saicinpainting.evaluation.data import InpaintingDataset as InpaintingEvaluationDataset, \
-    OurInpaintingDataset as OurInpaintingEvaluationDataset, ceil_modulo, InpaintingEvalOnlineDataset
+    OurInpaintingDataset as OurInpaintingEvaluationDataset, ceil_modulo, InpaintingEvalOnlineDataset, \
+    DepthInpaintingEvaluationDataset, DepthInpaintingEvaluationWithHdf5Dataset, \
+    load_depth_from_file, load_depth_from_hdf5
 from saicinpainting.training.data.aug import IAAAffine2, IAAPerspective2
 from saicinpainting.training.data.masks import get_mask_generator
-from saicinpainting.training.data.cacheddisocclusionmasks import CachedDisocclusionMaskGenerator
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,24 +46,6 @@ class InpaintingTrainDataset(Dataset):
         return dict(image=img,
                     mask=mask)
 
-class DisocclusionTrainDataset(InpaintingTrainDataset):
-    def __init__(self, indir, transform):
-        super().__init__(indir=indir, mask_generator=None, transform=transform)
-        self.mask_generator = CachedDisocclusionMaskGenerator()
-
-    def __getitem__(self, item):
-        path = self.in_files[item]
-        img = cv2.imread(path)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = self.transform(image=img)['image']
-        img = np.transpose(img, (2, 0, 1))
-        
-        # create a disoclussion map from cached disocclusion and disparity maps
-        mask = self.mask_generator(path, iter_i=self.iter_i)
-
-        self.iter_i += 1
-        return dict(image=img,
-                    mask=mask)    
 
 class InpaintingTrainWebDataset(IterableDataset):
     def __init__(self, indir, mask_generator, transform, shuffle_buffer=200):
@@ -115,6 +98,60 @@ class ImgSegmentationDataset(Dataset):
         tensor = torch.from_numpy(np.clip(mask.astype(int)-1, 0, None))
         ohe = F.one_hot(tensor.long(), num_classes=self.semantic_seg_n_classes) # w x h x n_classes
         return ohe.permute(2, 0, 1).float(), tensor.unsqueeze(0)
+
+
+class DepthInpaintingTrainDataset(Dataset):
+    def __init__(self, indir, depth_datadir, mask_generator, transform):
+        self.in_files = list(glob.glob(os.path.join(indir, '**', '*.jpg'), recursive=True))
+        # TODO: How are the depth files named in the directory
+        self.depth_files = [os.path.join(depth_datadir, os.path.basename(fname).rsplit('.', 1)[0] + '.npy')] 
+        self.mask_generator = mask_generator
+        self.transform = transform
+        self.iter_i = 0
+
+    def __len__(self):
+        return len(self.in_files)
+
+    def __getitem__(self, item):
+        path = self.in_files[item]
+        img = cv2.imread(path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = self.transform(image=img)['image']
+        img = np.transpose(img, (2, 0, 1))
+        depth = load_depth_from_file(self.depth_files[item])
+        # TODO: Do we need to transform depth maps during the training
+        mask = self.mask_generator(img, iter_i=self.iter_i)
+        self.iter_i += 1
+        return dict(image=img,
+                    mask=mask,
+                    depth=depth)
+
+
+class DepthInpaintingTrainWithHdf5Dataset(Dataset):
+    def __init__(self, indir, hdf5_path, mask_generator, transform):
+        self.in_files = list(glob.glob(os.path.join(indir, '**', '*.jpg'), recursive=True))
+        self.hdf5_path = hdf5_path
+        self.depth_files = [] # TODO: What are the path of depth files in the hdf5 file
+        self.mask_generator = mask_generator
+        self.transform = transform
+        self.iter_i = 0
+
+    def __len__(self):
+        return len(self.in_files)
+
+    def __getitem__(self, item):
+        path = self.in_files[item]
+        img = cv2.imread(path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = self.transform(image=img)['image']
+        img = np.transpose(img, (2, 0, 1))
+        depth = load_depth_from_hdf5(self.hdf5_path, self.depth_files[item])
+        # TODO: Do we need to transform depth maps during the training
+        mask = self.mask_generator(img, iter_i=self.iter_i)
+        self.iter_i += 1
+        return dict(image=img,
+                    mask=mask,
+                    depth=depth)
 
 
 def get_transforms(transform_variant, out_size):
@@ -222,7 +259,8 @@ def get_transforms(transform_variant, out_size):
     return transform
 
 
-def make_default_train_dataloader(indir, kind='default', out_size=512, mask_gen_kwargs=None, transform_variant='default',
+def make_default_train_dataloader(indir, depth_datadir=None, hdf5_path=None, kind='default',
+                                  out_size=512, mask_gen_kwargs=None, transform_variant='default',
                                   mask_generator_kind="mixed", dataloader_kwargs=None, ddp_kwargs=None, **kwargs):
     LOGGER.info(f'Make train dataloader {kind} from {indir}. Using mask generator={mask_generator_kind}')
 
@@ -230,15 +268,10 @@ def make_default_train_dataloader(indir, kind='default', out_size=512, mask_gen_
     transform = get_transforms(transform_variant, out_size)
 
     if kind == 'default':
-        if (mask_generator_kind == 'disocclusion'):
-            dataset = DisocclusionTrainDataset(indir=indir,
-                                                transform=transform,
-                                                **kwargs)
-        else:
-            dataset = InpaintingTrainDataset(indir=indir,
-                                             mask_generator=mask_generator,
-                                             transform=transform,
-                                             **kwargs)
+        dataset = InpaintingTrainDataset(indir=indir,
+                                         mask_generator=mask_generator,
+                                         transform=transform,
+                                         **kwargs)
     elif kind == 'default_web':
         dataset = InpaintingTrainWebDataset(indir=indir,
                                             mask_generator=mask_generator,
@@ -250,6 +283,18 @@ def make_default_train_dataloader(indir, kind='default', out_size=512, mask_gen_
                                          transform=transform,
                                          out_size=out_size,
                                          **kwargs)
+    elif kind == 'img_with_depth_files' and depth_datadir is not None:
+        dataset = InpaintingTrainDataset(indir=indir,
+                                         depth_datadir=depth_datadir,
+                                         mask_generator=mask_generator,
+                                         transform=transform,
+                                         **kwargs)
+    elif kind == 'img_with_depth_hdf5' and hdf5_path is not None:
+        dataset = InpaintingTrainDataset(indir=indir,
+                                         hdf5_path=hdf5_path,
+                                         mask_generator=mask_generator,
+                                         transform=transform,
+                                         **kwargs)          
     else:
         raise ValueError(f'Unknown train dataset kind {kind}')
 
@@ -270,10 +315,18 @@ def make_default_train_dataloader(indir, kind='default', out_size=512, mask_gen_
     return dataloader
 
 
-def make_default_val_dataset(indir, kind='default', out_size=512, transform_variant='default', **kwargs):
+def make_default_val_dataset(indir, depth_datadir=None, hdf5_path=None, kind='default',
+        out_size=512, transform_variant='default', **kwargs):
     if OmegaConf.is_list(indir) or isinstance(indir, (tuple, list)):
         return ConcatDataset([
-            make_default_val_dataset(idir, kind=kind, out_size=out_size, transform_variant=transform_variant, **kwargs) for idir in indir 
+            make_default_val_dataset(idir, kind=kind, out_size=out_size,
+                transform_variant=transform_variant, **kwargs) for idir in indir 
+        ])
+    
+    if depth_datadir is not None and (OmegaConf.is_list(depth_datadir) or isinstance(depth_datadir, (tuple, list))):
+        return ConcatDataset([
+            make_default_val_dataset(idir, depth_datadir=depth_datadir, kind=kind,
+                out_size=out_size, transform_variant=transform_variant, **kwargs) for idir in indir 
         ])
 
     LOGGER.info(f'Make val dataloader {kind} from {indir}')
@@ -298,6 +351,10 @@ def make_default_val_dataset(indir, kind='default', out_size=512, transform_vari
                                               transform=transform,
                                               out_size=out_size,
                                               **kwargs)
+    elif kind == 'img_with_depth_files' and depth_datadir is not None:
+        dataset = DepthInpaintingEvaluationDataset(indir, depth_datadir, **kwargs)
+    elif kind == 'img_with_depth_hdf5' and hdf5_path is not None:
+        dataset = DepthInpaintingEvaluationWithHdf5Dataset(indir, hdf5_path, **kwargs)
     else:
         raise ValueError(f'Unknown val dataset kind {kind}')
 

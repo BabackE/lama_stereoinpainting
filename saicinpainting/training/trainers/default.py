@@ -20,17 +20,21 @@ def make_constant_area_crop_batch(batch, **kwargs):
                                                                              **kwargs)
     batch['image'] = batch['image'][:, :, crop_y : crop_y + crop_height, crop_x : crop_x + crop_width]
     batch['mask'] = batch['mask'][:, :, crop_y: crop_y + crop_height, crop_x: crop_x + crop_width]
+    if 'depth' in batch.keys():
+        batch['depth'] = batch['depth'][:, :, crop_y: crop_y + crop_height, crop_x: crop_x + crop_width]
     return batch
 
 
 class DefaultInpaintingTrainingModule(BaseInpaintingTrainingModule):
-    def __init__(self, *args, concat_mask=True, rescale_scheduler_kwargs=None, image_to_discriminator='predicted_image',
+    def __init__(self, *args, concat_mask=True, concat_depth=False, rescale_scheduler_kwargs=None,
+                 image_to_discriminator='predicted_image',
                  add_noise_kwargs=None, noise_fill_hole=False, const_area_crop_kwargs=None,
                  distance_weighter_kwargs=None, distance_weighted_mask_for_discr=False,
                  fake_fakes_proba=0, fake_fakes_generator_kwargs=None,
                  **kwargs):
         super().__init__(*args, **kwargs)
         self.concat_mask = concat_mask
+        self.concat_depth = concat_depth
         self.rescale_size_getter = get_ramp(**rescale_scheduler_kwargs) if rescale_scheduler_kwargs is not None else None
         self.image_to_discriminator = image_to_discriminator
         self.add_noise_kwargs = add_noise_kwargs
@@ -66,6 +70,11 @@ class DefaultInpaintingTrainingModule(BaseInpaintingTrainingModule):
 
         if self.concat_mask:
             masked_img = torch.cat([masked_img, mask], dim=1)
+
+        if self.concat_depth and 'depth' in batch.keys():
+            depth = batch['depth']
+            masked_depth = depth * (1 - mask)
+            masked_img = torch.cat([masked_img, masked_depth], dim=1)
 
         batch['predicted_image'] = self.generator(masked_img)
         batch['inpainted'] = mask * batch['predicted_image'] + (1 - mask) * batch['image']

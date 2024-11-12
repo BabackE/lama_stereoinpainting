@@ -4,6 +4,7 @@ import os
 import cv2
 import PIL.Image as Image
 import numpy as np
+import h5py
 
 from torch.utils.data import Dataset
 import torch.nn.functional as F
@@ -18,6 +19,41 @@ def load_image(fname, mode='RGB', return_orig=False):
         return out_img, img
     else:
         return out_img
+
+
+def load_depth_from_file(fname, return_orig=False):
+    depth = np.load(fname)
+    # TODO: How to normalize depth maps
+    out_depth = depth / np.max(depth)
+    if return_orig:
+        return out_depth, depth
+    else:
+        return out_depth
+
+def load_depth_from_hdf5(hdf5_path, depth_path, return_orig=False):
+    with h5py.File(hdf5_path, 'r') as hdf5_file:
+        # Access the dataset
+        dataset = hdf5_file[depth_path]
+        depth_map_u16 = dataset[:]
+        
+        # Retrieve mean and std attributes
+        depth_map_min = dataset.attrs['min']
+        depth_map_range = dataset.attrs['range']
+        
+        # Convert uint16 back to normalized float
+        divisor = 65535.0 if depth_map_u16.dtype == np.uint16 else 255.0 
+        depth_map_normalized = depth_map_u16.astype(np.float32) / divisor
+        
+        # Denormalize to reconstruct the original depth map
+        depth = depth_map_normalized * depth_map_range + depth_map_min
+        
+        # TODO: How to normalize depth maps
+        out_depth = depth / np.max(depth)
+
+        if return_orig:
+            return out_depth, depth
+        else:
+            return out_depth
 
 
 def ceil_modulo(x, mod):
@@ -104,6 +140,73 @@ class OurInpaintingDataset(Dataset):
         if self.pad_out_to_modulo is not None and self.pad_out_to_modulo > 1:
             result['image'] = pad_img_to_modulo(result['image'], self.pad_out_to_modulo)
             result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
+
+        return result
+
+class DepthInpaintingEvaluationDataset(Dataset):
+    def __init__(self, img_datadir, depth_datadir, img_suffix='.jpg', depth_suffix='.npy', pad_out_to_modulo=None, scale_factor=None):
+        self.img_datadir = img_datadir
+        self.depth_datadir = depth_datadir
+        self.mask_filenames = sorted(list(glob.glob(os.path.join(self.img_datadir, '**', '*mask*.*'), recursive=True)))
+        self.img_filenames = [fname.rsplit('_mask', 1)[0] + img_suffix for fname in self.mask_filenames]
+        # TODO: How are the depth maps named in the directory
+        self.depth_filenames = [os.path.join(self.depth_datadir,
+            os.path.basename(fname).rsplit('_mask', 1)[0] + depth_suffix) for fname in self.mask_filenames]
+        self.pad_out_to_modulo = pad_out_to_modulo
+        self.scale_factor = scale_factor
+
+    def __len__(self):
+        return len(self.mask_filenames)
+
+    def __getitem__(self, i):
+        image = load_image(self.img_filenames[i], mode='RGB')
+        mask = load_image(self.mask_filenames[i], mode='L')
+        depth = load_depth_from_file(self.depth_filenames[i])
+        result = dict(image=image, mask=mask[None, ...], depth=depth[None, ...])
+
+        if self.scale_factor is not None:
+            result['image'] = scale_image(result['image'], self.scale_factor)
+            result['mask'] = scale_image(result['mask'], self.scale_factor, interpolation=cv2.INTER_NEAREST)
+            result['depth'] = scale_image(result['depth'], self.scale_factor) # TODO: How to resize the depth maps
+
+        if self.pad_out_to_modulo is not None and self.pad_out_to_modulo > 1:
+            result['unpad_to_size'] = result['image'].shape[1:]
+            result['image'] = pad_img_to_modulo(result['image'], self.pad_out_to_modulo)
+            result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
+            result['depth'] = pad_img_to_modulo(result['depth'], self.pad_out_to_modulo)
+
+        return result
+
+
+class DepthInpaintingEvaluationWithHdf5Dataset(Dataset):
+    def __init__(self, img_datadir, hdf5_path, img_suffix='.jpg', pad_out_to_modulo=None, scale_factor=None):
+        self.img_datadir = img_datadir
+        self.hdf5_path = hdf5_path
+        self.mask_filenames = sorted(list(glob.glob(os.path.join(self.datadir, '**', '*mask*.*'), recursive=True)))
+        self.img_filenames = [fname.rsplit('_mask', 1)[0] + img_suffix for fname in self.mask_filenames]
+        self.depth_paths = [] # TODO: What are the path of depth maps in the hdf5 file
+        self.pad_out_to_modulo = pad_out_to_modulo
+        self.scale_factor = scale_factor
+
+    def __len__(self):
+        return len(self.mask_filenames)
+
+    def __getitem__(self, i):
+        image = load_image(self.img_filenames[i], mode='RGB')
+        mask = load_image(self.mask_filenames[i], mode='L')
+        depth = load_depth_from_hdf5(self.hdf5_path, self.depth_paths[i])
+        result = dict(image=image, mask=mask[None, ...], depth=depth[None, ...])
+
+        if self.scale_factor is not None:
+            result['image'] = scale_image(result['image'], self.scale_factor)
+            result['mask'] = scale_image(result['mask'], self.scale_factor, interpolation=cv2.INTER_NEAREST)
+            result['depth'] = scale_image(result['depth'], self.scale_factor) # TODO: How to resize the depth maps
+
+        if self.pad_out_to_modulo is not None and self.pad_out_to_modulo > 1:
+            result['unpad_to_size'] = result['image'].shape[1:]
+            result['image'] = pad_img_to_modulo(result['image'], self.pad_out_to_modulo)
+            result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
+            result['depth'] = pad_img_to_modulo(result['depth'], self.pad_out_to_modulo)
 
         return result
 
