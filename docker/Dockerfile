@@ -48,9 +48,12 @@ RUN pip install scikit-image==0.22.0 torchtext==0.6.0 albumentations==0.5.2 open
 # get the lama repo
 ADD "https://api.github.com/repos/BabackE/lama_stereoinpainting/commits?per_page=1" latest_commit
 RUN git clone https://github.com/BabackE/lama_stereoinpainting.git "/home/$USERNAME/lama"
+RUN git remote set-url origin git@github.com:BabackE/lama_stereoinpainting.git
 ENV PYTHONPATH="/home/$USERNAME/lama"
 ENV TORCH_HOME="/home/$USERNAME/lama"
 ENV USER=$USERNAME
 
 # this must be done after git is pulled to create the lama folder
 RUN ln -s /home/user/concert_data /home/user/lama/concert
+
+
