@@ -30,6 +30,22 @@ def load_depth_from_file(fname, return_orig=False):
     else:
         return out_depth
 
+def normalize_depth(disparity_map):
+    disparityf = disparity_map.astype(np.float32)
+    disparity_not_zero = disparityf > 0.0
+    disparity_zero = disparityf == 0.0
+    true_depth = np.zeros(disparityf.shape)
+    A = 1.0
+    B = 0.0005
+    max_depth = 1.0
+    true_depth[disparity_not_zero] = 1/(A+B*disparityf[disparity_not_zero])
+    true_depth[disparity_zero] = max_depth
+
+    min_depth,max_depth = true_depth.min(), true_depth.max()
+    true_depth_normalized = (true_depth - min_depth) / (max_depth - min_depth)
+    return true_depth_normalized
+
+
 def load_depth_from_hdf5(hdf5_path, depth_path, return_orig=False):
     with h5py.File(hdf5_path, 'r') as hdf5_file:
         # Access the dataset
