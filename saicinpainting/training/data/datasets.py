@@ -133,6 +133,10 @@ class DepthInpaintingTrainWithHdf5Dataset(Dataset):
     def __init__(self, indir, hdf5_path, mask_generator, transform):
         self.in_files = list(glob.glob(os.path.join(indir, '**', '*.jpg'), recursive=True))
         self.hdf5_path = hdf5_path
+        
+        # TODO note:
+        # read self.in_files and create equivalent depth path inside the hdf5 file that we'll look up in load_depth_from_hdf5
+
         self.depth_files = [] # TODO: What are the path of depth files in the hdf5 file
         self.mask_generator = mask_generator
         self.transform = transform
