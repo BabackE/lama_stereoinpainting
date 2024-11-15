@@ -26,7 +26,7 @@ def make_constant_area_crop_batch(batch, **kwargs):
 
 
 class DefaultInpaintingTrainingModule(BaseInpaintingTrainingModule):
-    def __init__(self, *args, concat_mask=True, concat_depth=False, rescale_scheduler_kwargs=None,
+    def __init__(self, *args, concat_mask=True, concat_depth=True, rescale_scheduler_kwargs=None,
                  image_to_discriminator='predicted_image',
                  add_noise_kwargs=None, noise_fill_hole=False, const_area_crop_kwargs=None,
                  distance_weighter_kwargs=None, distance_weighted_mask_for_discr=False,

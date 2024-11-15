@@ -116,10 +116,12 @@ class DepthInpaintingTrainDataset(Dataset):
         path = self.in_files[item]
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = self.transform(image=img)['image']
-        img = np.transpose(img, (2, 0, 1))
         depth = load_depth_from_file(self.depth_files[item])
-        # TODO: Do we need to transform depth maps during the training
+        # TODO: is it fine to transform depth as a mask 
+        transform_result = self.transform(image=img, mask=depth)
+        img = transform_result['image']
+        img = np.transpose(img, (2, 0, 1))
+        depth = transform_result['mask']
         mask = self.mask_generator(img, iter_i=self.iter_i)
         self.iter_i += 1
         return dict(image=img,
@@ -143,10 +145,12 @@ class DepthInpaintingTrainWithHdf5Dataset(Dataset):
         path = self.in_files[item]
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = self.transform(image=img)['image']
-        img = np.transpose(img, (2, 0, 1))
         depth = load_depth_from_hdf5(self.hdf5_path, self.depth_files[item])
-        # TODO: Do we need to transform depth maps during the training
+        # TODO: is it fine to transform depth as a mask 
+        transform_result = self.transform(image=img, mask=depth)
+        img = transform_result['image']
+        img = np.transpose(img, (2, 0, 1))
+        depth = transform_result['mask']
         mask = self.mask_generator(img, iter_i=self.iter_i)
         self.iter_i += 1
         return dict(image=img,
@@ -284,13 +288,13 @@ def make_default_train_dataloader(indir, depth_datadir=None, hdf5_path=None, kin
                                          out_size=out_size,
                                          **kwargs)
     elif kind == 'img_with_depth_files' and depth_datadir is not None:
-        dataset = InpaintingTrainDataset(indir=indir,
+        dataset = DepthInpaintingTrainDataset(indir=indir,
                                          depth_datadir=depth_datadir,
                                          mask_generator=mask_generator,
                                          transform=transform,
                                          **kwargs)
     elif kind == 'img_with_depth_hdf5' and hdf5_path is not None:
-        dataset = InpaintingTrainDataset(indir=indir,
+        dataset = DepthInpaintingTrainWithHdf5Dataset(indir=indir,
                                          hdf5_path=hdf5_path,
                                          mask_generator=mask_generator,
                                          transform=transform,
