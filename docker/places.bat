@@ -8,6 +8,7 @@ docker run --gpus all -it --rm --shm-size=8gb --env="DISPLAY" ^
 --volume="%SRCDIR%\experiments":/home/user/lama/experiments ^
 --volume="%SRCDIR%\docker\places\places_standard_dataset":/home/user/lama/places_standard_dataset ^
 --volume="%SRCDIR%\outputs":/home/user/lama/outputs ^
+--volume="%SRCDIR%\outputs\tb_logs":/home/user/lama/tb_logs ^
 --volume="%SRCDIR%\models\models":/home/user/lama/models/models ^
 --volume="%SRCDIR%\docker\.ssh\id_ed25119":/home/user/.ssh/id_ed25119 ^
 --volume="%SRCDIR%\hub":/home/user/lama/hub ^
