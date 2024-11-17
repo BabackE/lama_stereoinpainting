@@ -2,8 +2,8 @@
 FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
 
 # setup the lama dependencies
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # Preconfigure tzdata
 ENV DEBIAN_FRONTEND=noninteractive
@@ -51,7 +51,6 @@ COPY places/places_standard_dataset /home/user/places_standard_dataset
 # get the lama repo
 ADD "https://api.github.com/repos/BabackE/lama_stereoinpainting/commits?per_page=1" latest_commit
 RUN git clone https://github.com/BabackE/lama_stereoinpainting.git "/home/$USERNAME/lama"
-RUN git remote set-url origin git@github.com:BabackE/lama_stereoinpainting.git
 ENV PYTHONPATH="/home/$USERNAME/lama"
 ENV TORCH_HOME="/home/$USERNAME/lama"
 ENV USER=$USERNAME
@@ -61,3 +60,7 @@ ENV USER=$USERNAME
 
 # copy the places dataset
 RUN ln -s /home/user/places_standard_dataset /home/user/lama/places_standard_dataset
+
+# copy the ssh keys
+COPY .ssh /home/user/.ssh
+RUN cd /home/$USERNAME/lama && git remote set-url origin git@github.com:BabackE/lama_stereoinpainting.git
