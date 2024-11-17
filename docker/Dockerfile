@@ -42,8 +42,11 @@ RUN pip install -U tensorflow==2.14.0
 RUN pip install -U pip numpy scipy joblib matplotlib pandas pytorch-lightning==1.2.9 tabulate easydict==1.10 kornia==0.5.0 webdataset packaging gpustat tqdm pyyaml hydra-core==1.1.0 scikit-learn==1.3.1 tabulate
 RUN pip install scikit-image==0.22.0 torchtext==0.6.0 albumentations==0.5.2 opencv-python-headless==4.8.1.78
 
-# copy the concert data
+# copy the concert dataset
 #COPY concert /home/user/concert_data
+
+# copy the places dataset
+COPY places/places_standard_dataset /home/user/places_standard_dataset
 
 # get the lama repo
 ADD "https://api.github.com/repos/BabackE/lama_stereoinpainting/commits?per_page=1" latest_commit
@@ -53,7 +56,8 @@ ENV PYTHONPATH="/home/$USERNAME/lama"
 ENV TORCH_HOME="/home/$USERNAME/lama"
 ENV USER=$USERNAME
 
-# this must be done after git is pulled to create the lama folder
-RUN ln -s /home/user/concert_data /home/user/lama/concert
+# setup the symlinks  to the datasets
+#RUN ln -s /home/user/concert_data /home/user/lama/concert
 
-
+# copy the places dataset
+RUN ln -s /home/user/places_standard_dataset /home/user/lama/places_standard_dataset
