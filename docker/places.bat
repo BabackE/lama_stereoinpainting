@@ -9,4 +9,5 @@ docker run --gpus all -it --rm --shm-size=8gb --env="DISPLAY" ^
 --volume="%SRCDIR%\models\models":/home/user/lama/models/models ^
 --volume="%SRCDIR%\hub":/home/user/lama/hub ^
 --volume="%SRCDIR%\docker\places\depth":/home/user/places_standard_dataset/depth ^
+--volume="%SRCDIR%\docker\.ssh":/home/user/.ssh ^
 --name="lama" lama_places_depth /bin/bash
