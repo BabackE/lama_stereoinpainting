@@ -225,10 +225,9 @@ def hist_plot(depth, title='Histogram of Depth Values', xlabel='Depth'):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='List files in hdf5 file.')
-    parser.add_argument('hdf5_file', type=str, help='Root directory containing images.')
+    parser.add_argument('--hdf5_file', type=str, help='Root directory containing images.')
     parser.add_argument('--max_count', type=int, default=None, help='Maximum number of groups/datasets to list.')
     args = parser.parse_args()
 
     with h5py.File(args.hdf5_file, 'r') as hdf5_file:
         list_all_groups_and_datasets(hdf5_file, args.max_count)
-        
