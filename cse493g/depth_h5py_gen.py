@@ -83,18 +83,21 @@ def create_hdf5_from_directory(root_dir, hdf5_file_path, refresh_threshold=5000)
                 print(f"Skipped {skipped_count} files in {group_path}.")
 
 
-def list_all_groups_and_datasets(hdf5_file, max_count=None):
-    count = 0
+def list_all_groups_and_datasets(hdf5_file, max_count=None, count=0):
+    if max_count is not None and count >= max_count:
+        return
+
     for name, obj in hdf5_file.items():
         if isinstance(obj, h5py.Group):
             print(f"Group: {obj.name}")
-            list_all_groups_and_datasets(obj)
+            list_all_groups_and_datasets(obj, max_count, count)
         elif isinstance(obj, h5py.Dataset):
             print(f"  Dataset: {obj.name}")
             count += 1
-        
+
         if max_count is not None and count >= max_count:
             break
+
 
 def access_depth_map(hdf5_file_path, dataset_path):
     """
