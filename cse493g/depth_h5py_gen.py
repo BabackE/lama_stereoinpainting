@@ -83,20 +83,15 @@ def create_hdf5_from_directory(root_dir, hdf5_file_path, refresh_threshold=5000)
                 print(f"Skipped {skipped_count} files in {group_path}.")
 
 
-def list_all_groups_and_datasets(hdf5_file, max_count=None, count=0):
-    if max_count is not None and count >= max_count:
-        return
-
+def list_all_groups_and_datasets(hdf5_file):
     for name, obj in hdf5_file.items():
         if isinstance(obj, h5py.Group):
             print(f"Group: {obj.name}")
-            list_all_groups_and_datasets(obj, max_count, count)
+            list_all_groups_and_datasets(obj)
         elif isinstance(obj, h5py.Dataset):
             print(f"  Dataset: {obj.name}")
-            count += 1
 
-        if max_count is not None and count >= max_count:
-            break
+
 
 
 def access_depth_map(hdf5_file_path, dataset_path):
@@ -229,8 +224,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='List files in hdf5 file.')
     parser.add_argument('--hdf5_file', type=str, help='Root directory containing images.')
-    parser.add_argument('--max_count', type=int, default=None, help='Maximum number of groups/datasets to list.')
     args = parser.parse_args()
 
     with h5py.File(args.hdf5_file, 'r') as hdf5_file:
-        list_all_groups_and_datasets(hdf5_file, args.max_count)
+        list_all_groups_and_datasets(hdf5_file)
