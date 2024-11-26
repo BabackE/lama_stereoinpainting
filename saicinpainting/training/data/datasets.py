@@ -163,7 +163,7 @@ class DepthInpaintingTrainWithHdf5Dataset(Dataset):
             'mask': mask,      # e.g., (H, W)
             'depth': depth     # e.g., (H, W)
         }
-        LOGGER.info(f"Index {item}: img shape {sample['img'].shape}, mask shape {sample['mask'].shape}, depth shape {sample['depth'].shape}")
+        LOGGER.info(f"Index {item} {path}: img shape {sample['img'].shape}, mask shape {sample['mask'].shape}, depth shape {sample['depth'].shape}")
         self.iter_i += 1
         return dict(image=img,
                     mask=mask,
