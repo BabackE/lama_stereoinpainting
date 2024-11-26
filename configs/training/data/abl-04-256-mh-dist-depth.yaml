@@ -7,7 +7,7 @@ num_workers: 3
 train:
   kind: img_with_depth_hdf5
   indir: ${location.data_root_dir}/train
-  hdf5_path: ${location.data_root_dir}/train_large_places365standard_disparity_u8.hdf5
+  hdf5_path: ${location.data_root_dir}/depth/train_large_places365standard_disparity_u8.hdf5
   out_size: 256
   mask_gen_kwargs:  # probabilities do not need to sum to 1, they are re-normalized in mask generator
     irregular_proba: 1
@@ -37,7 +37,7 @@ train:
 val:
   kind: img_with_depth_hdf5
   indir: ${location.data_root_dir}/val
-  hdf5_path: ${location.data_root_dir}/val_large_places365standard_disparity_u8.hdf5
+  hdf5_path: ${location.data_root_dir}/depth/val_large_places365standard_disparity_u8.hdf5
   img_suffix: .png
   dataloader_kwargs:
     batch_size: ${data.val_batch_size}
