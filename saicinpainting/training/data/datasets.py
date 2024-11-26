@@ -137,7 +137,7 @@ class DepthInpaintingTrainWithHdf5Dataset(Dataset):
         # TODO note:
         # read self.in_files and create equivalent depth path inside the hdf5 file that we'll look up in load_depth_from_hdf5
 
-        self.depth_files = [] # TODO: What are the path of depth files in the hdf5 file
+        self.depth_files = [path.split(indir,1)[1].replace("\\","/").removesuffix(".jpg") for path in self.in_files]
         self.mask_generator = mask_generator
         self.transform = transform
         self.iter_i = 0
