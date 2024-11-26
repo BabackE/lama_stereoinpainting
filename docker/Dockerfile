@@ -46,7 +46,7 @@ RUN pip install scikit-image==0.22.0 torchtext==0.6.0 albumentations==0.5.2 open
 #COPY concert /home/user/concert_data
 
 # copy the places dataset
-COPY places/places_standard_dataset /home/user/places_standard_dataset
+#COPY places/places_standard_dataset /home/user/places_standard_dataset
 
 # get the lama repo
 ADD "https://api.github.com/repos/BabackE/lama_stereoinpainting/commits?per_page=1" latest_commit
@@ -59,7 +59,7 @@ ENV USER=$USERNAME
 #RUN ln -s /home/user/concert_data /home/user/lama/concert
 
 # copy the places dataset
-RUN ln -s /home/user/places_standard_dataset /home/user/lama/places_standard_dataset
+#RUN ln -s /home/user/places_standard_dataset /home/user/lama/places_standard_dataset
 
 # copy the ssh keys
 COPY .ssh /home/user/.ssh
