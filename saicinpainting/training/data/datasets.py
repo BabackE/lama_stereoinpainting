@@ -123,6 +123,13 @@ class DepthInpaintingTrainDataset(Dataset):
         img = np.transpose(img, (2, 0, 1))
         depth = transform_result['mask']
         mask = self.mask_generator(img, iter_i=self.iter_i)
+        sample = {
+            'img': img,        # e.g., (C, H, W)
+            'mask': mask,      # e.g., (H, W)
+            'depth': depth     # e.g., (H, W)
+        }
+        print(f"Index {item}: img shape {sample['img'].shape}, mask shape {sample['mask'].shape}, depth shape {sample['depth'].shape}")
+
         self.iter_i += 1
         return dict(image=img,
                     mask=mask,
