@@ -104,7 +104,7 @@ class DepthInpaintingTrainDataset(Dataset):
     def __init__(self, indir, depth_datadir, mask_generator, transform):
         self.in_files = list(glob.glob(os.path.join(indir, '**', '*.jpg'), recursive=True))
         # TODO: How are the depth files named in the directory
-        self.depth_files = [os.path.join(depth_datadir, os.path.basename(fname).rsplit('.', 1)[0] + '.npy')] 
+        self.depth_files = [path.split(indir,1)[1].replace("\\","/").removesuffix(".jpg") for path in self.in_files]
         self.mask_generator = mask_generator
         self.transform = transform
         self.iter_i = 0
@@ -141,6 +141,7 @@ class DepthInpaintingTrainWithHdf5Dataset(Dataset):
         self.mask_generator = mask_generator
         self.transform = transform
         self.iter_i = 0
+        print(f"DEPTH DATALOADER WITH {len(self.in_files)} in {self.hdf5_path}")
 
     def __len__(self):
         return len(self.in_files)

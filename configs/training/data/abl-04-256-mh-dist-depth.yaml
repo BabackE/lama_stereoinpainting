@@ -45,7 +45,9 @@ val:
     num_workers: ${data.num_workers}
 
 visual_test:
+  kind: img_with_depth_hdf5
   indir: ${location.data_root_dir}/visual_test
+  hdf5_path: ${location.data_root_dir}/depth/val_large_places365standard_disparity_u8.hdf5
   img_suffix: .png
   pad_out_to_modulo: 32
   dataloader_kwargs:

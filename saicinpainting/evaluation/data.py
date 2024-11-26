@@ -198,9 +198,10 @@ class DepthInpaintingEvaluationWithHdf5Dataset(Dataset):
     def __init__(self, img_datadir, hdf5_path, img_suffix='.jpg', pad_out_to_modulo=None, scale_factor=None):
         self.img_datadir = img_datadir
         self.hdf5_path = hdf5_path
-        self.mask_filenames = sorted(list(glob.glob(os.path.join(self.datadir, '**', '*mask*.*'), recursive=True)))
+        self.mask_filenames = sorted(list(glob.glob(os.path.join(self.img_datadir, '**', '*mask*.*'), recursive=True)))
         self.img_filenames = [fname.rsplit('_mask', 1)[0] + img_suffix for fname in self.mask_filenames]
-        self.depth_paths = [] # TODO: What are the path of depth maps in the hdf5 file
+        depth_root = "val" if "/val" in img_datadir else "visual_test"
+        self.depth_paths = [path.replace(img_datadir, depth_root).replace("\\","/").removesuffix(img_suffix) for path in self.img_filenames]
         self.pad_out_to_modulo = pad_out_to_modulo
         self.scale_factor = scale_factor
 
