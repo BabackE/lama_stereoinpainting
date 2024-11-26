@@ -229,13 +229,6 @@ class BaseInpaintingTrainingModule(ptl.LightningModule):
             set_requires_grad(self.generator, False)
             set_requires_grad(self.discriminator, True)
 
-        print("Check datatype for batch items in trainer:")
-        for key, value in batch.items():
-            if isinstance(value, torch.Tensor):
-                print(f"{key}: {value.dtype}")
-            else:
-                print(f"{key}: Not a tensor (type: {type(value)})")
-
         batch = self(batch)
 
         total_loss = 0
