@@ -1,6 +1,6 @@
 # @package _group_
 
-batch_size: 20
+batch_size: 10
 val_batch_size: 2
 num_workers: 3
 
@@ -8,7 +8,7 @@ train:
   kind: img_with_depth_hdf5
   indir: ${location.data_root_dir}/train
   hdf5_path: /home/user/lama/places_depth/train_large_places365standard_disparity_u8.hdf5
-  out_size: 512
+  out_size: 256
   mask_gen_kwargs:  # probabilities do not need to sum to 1, they are re-normalized in mask generator
     irregular_proba: 1
     irregular_kwargs:
