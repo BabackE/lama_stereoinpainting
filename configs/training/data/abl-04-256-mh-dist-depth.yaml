@@ -28,7 +28,7 @@ train:
 
     segm_proba: 0
 
-  transform_variant: no_augs
+  transform_variant: distortions
   dataloader_kwargs:
     batch_size: ${data.batch_size}
     shuffle: True
