@@ -64,7 +64,7 @@ def load_depth_from_hdf5(hdf5_path, depth_path, return_orig=False):
         depth = depth_map_normalized * depth_map_range + depth_map_min
         
         #out_depth = depth / np.max(depth)
-        out_depth = normalize_depth(out_depth)
+        out_depth = normalize_depth(depth)
 
         if return_orig:
             return out_depth, depth
