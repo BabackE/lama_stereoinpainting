@@ -1,4 +1,5 @@
 import glob
+import logging
 import os
 
 import cv2
@@ -9,6 +10,7 @@ import h5py
 from torch.utils.data import Dataset
 import torch.nn.functional as F
 
+LOGGER = logging.getLogger(__name__)
 
 def load_image(fname, mode='RGB', return_orig=False):
     img = np.array(Image.open(fname).convert(mode))
@@ -226,6 +228,7 @@ class DepthInpaintingEvaluationWithHdf5Dataset(Dataset):
             result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
             result['depth'] = pad_img_to_modulo(result['depth'], self.pad_out_to_modulo)
 
+        LOGGER.info(f"Index {i}: img shape {result['image'].shape}, mask shape {result['mask'].shape}, depth shape {result['depth'].shape}")
         return result
 
 class PrecomputedInpaintingResultsDataset(InpaintingDataset):
