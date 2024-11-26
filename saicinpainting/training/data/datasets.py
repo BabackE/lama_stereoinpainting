@@ -156,6 +156,7 @@ class DepthInpaintingTrainWithHdf5Dataset(Dataset):
         img = transform_result['image']
         img = np.transpose(img, (2, 0, 1))
         depth = transform_result['mask']
+        depth = depth.unsqueeze(0) 
         depth = depth.astype('float32')
         mask = self.mask_generator(img, iter_i=self.iter_i)
         sample = {
