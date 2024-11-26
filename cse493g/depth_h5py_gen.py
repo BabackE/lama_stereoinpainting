@@ -21,6 +21,52 @@ def refresh_depth_estimator():
     return depth_anything
 
 
+def copy_jpg_into_hdf5(root_dir, hdf5_file_path):
+    process_count = 0
+    depth_anything = None
+    with h5py.File(hdf5_file_path, 'a') as hdf5_file:
+        for dirpath, dirnames, filenames in os.walk(root_dir):
+            skipped_count = 0
+            # Compute the relative path and use it to create groups
+            relative_path = os.path.relpath(dirpath, root_dir)
+            group_path = relative_path.replace(os.sep, '/')
+            # Create groups recursively
+            group = hdf5_file.require_group(group_path)
+           
+            for filename in filenames:
+                dataset_name = os.path.splitext(filename)[0]
+                full_dataset_path = group_path + '/' + dataset_name
+
+                # Check if dataset already exists in the HDF5 file
+                if full_dataset_path in hdf5_file:
+                    skipped_count += 1
+                    continue
+            
+            if skipped_count < len(filenames):
+                print(f"Processing {group_path} with {len(filenames)-skipped_count} files.")
+                with tqdm(total=len(filenames), desc=f"Depth gen", unit="item") as pbar:
+                    for filename in tqdm(filenames, desc=group_path):
+                        dataset_name = filename
+                        full_dataset_path = group_path + '/' + dataset_name
+                        pbar.set_description(f"{full_dataset_path}")
+
+                        # Check if dataset already exists in the HDF5 file
+                        if full_dataset_path in hdf5_file:
+                            skipped_count += 1
+                            continue
+
+                        # Assuming files are depth maps stored as NumPy arrays
+                        file_path = os.path.join(dirpath, filename)
+                        with open(file_path, "rb") as img_file:
+                            binary_data = img_file.read()
+                        
+                        group.create_dataset(dataset_name, data=np.void(binary_data))
+
+                        process_count+=1
+                        pbar.update(1)
+            
+                print(f"Skipped {skipped_count} files in {group_path}.")
+
 
 def create_hdf5_from_directory(root_dir, hdf5_file_path, refresh_threshold=5000):
     process_count = 0
@@ -92,6 +138,13 @@ def list_all_groups_and_datasets(hdf5_file):
             print(f"  Dataset: {obj.name}")
 
 
+def get_jpg_from_hdf5(hdf5_file_path, dataset_path):
+    with h5py.File(hdf5_file_path, 'r') as hdf5_file:
+        if dataset_path in hdf5_file:
+            # Access the dataset
+            dataset = hdf5_file[dataset_path][()]
+            return np.frombuffer(dataset, dtype=np.uint8)
+    return None
 
 
 def access_depth_map(hdf5_file_path, dataset_path):
