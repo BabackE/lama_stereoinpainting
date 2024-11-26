@@ -228,7 +228,7 @@ class DepthInpaintingEvaluationWithHdf5Dataset(Dataset):
             result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
             result['depth'] = pad_img_to_modulo(result['depth'], self.pad_out_to_modulo)
 
-        LOGGER.info(f"Index {i}: img shape {result['image'].shape}, mask shape {result['mask'].shape}, depth shape {result['depth'].shape}")
+        #LOGGER.info(f"Index {i}: img shape {result['image'].shape}, mask shape {result['mask'].shape}, depth shape {result['depth'].shape}")
         return result
 
 class PrecomputedInpaintingResultsDataset(InpaintingDataset):
