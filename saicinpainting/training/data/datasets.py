@@ -147,6 +147,7 @@ class DepthInpaintingTrainWithHdf5Dataset(Dataset):
         return len(self.in_files)
 
     def __getitem__(self, item):
+        print("Check datatype for batch items when creating the dataloader:")
         path = self.in_files[item]
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -155,8 +156,14 @@ class DepthInpaintingTrainWithHdf5Dataset(Dataset):
         transform_result = self.transform(image=img, mask=depth)
         img = transform_result['image']
         img = np.transpose(img, (2, 0, 1))
+        # img = img.astype('float32')
+        print(f"img dtype: {img.dtype}")
         depth = transform_result['mask']
+        # depth = depth.astype('float32')
+        print(f"depth dtype: {depth.dtype}")
         mask = self.mask_generator(img, iter_i=self.iter_i)
+        # mask = mask.astype('float32')
+        print(f"mask dtype: {mask.dtype}")
         self.iter_i += 1
         return dict(image=img,
                     mask=mask,
