@@ -172,6 +172,14 @@ class DepthInpaintingTrainWithHdf5Dataset(Dataset):
                     mask=mask,
                     depth=depth)
 
+class RandomChannelDrop(A.core.transforms_interface.ImageOnlyTransform):
+    def __init__(self, always_apply=False, p=0.5):
+        super(RandomChannelDrop, self).__init__(always_apply, p)
+
+    def apply(self, image, **params):
+        channel_to_drop = random.randint(0, 2)
+        image[:, :, channel_to_drop] = 0
+        return image
 
 def get_transforms(transform_variant, out_size):
     if transform_variant == 'default':
@@ -198,6 +206,38 @@ def get_transforms(transform_variant, out_size):
             A.CLAHE(),
             A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2),
             A.HueSaturationValue(hue_shift_limit=5, sat_shift_limit=30, val_shift_limit=5),
+            A.ToFloat()
+        ])
+    elif transform_variant == 'distortions_color_drop_0.5':
+        transform = A.Compose([
+            IAAPerspective2(scale=(0.0, 0.06)),
+            IAAAffine2(scale=(0.7, 1.3),
+                       rotate=(-40, 40),
+                       shear=(-0.1, 0.1)),
+            A.PadIfNeeded(min_height=out_size, min_width=out_size),
+            A.OpticalDistortion(),
+            A.RandomCrop(height=out_size, width=out_size),
+            A.HorizontalFlip(),
+            A.CLAHE(),
+            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2),
+            A.HueSaturationValue(hue_shift_limit=5, sat_shift_limit=30, val_shift_limit=5),
+            A.RandomChannelDrop(p=0.5),
+            A.ToFloat()
+        ])
+    elif transform_variant == 'distortions_color_drop_0.2':
+        transform = A.Compose([
+            IAAPerspective2(scale=(0.0, 0.06)),
+            IAAAffine2(scale=(0.7, 1.3),
+                       rotate=(-40, 40),
+                       shear=(-0.1, 0.1)),
+            A.PadIfNeeded(min_height=out_size, min_width=out_size),
+            A.OpticalDistortion(),
+            A.RandomCrop(height=out_size, width=out_size),
+            A.HorizontalFlip(),
+            A.CLAHE(),
+            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2),
+            A.HueSaturationValue(hue_shift_limit=5, sat_shift_limit=30, val_shift_limit=5),
+            A.RandomChannelDrop(p=0.2),
             A.ToFloat()
         ])
     elif transform_variant == 'distortions_scale05_1':
