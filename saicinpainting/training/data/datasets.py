@@ -221,7 +221,7 @@ def get_transforms(transform_variant, out_size):
             A.CLAHE(),
             A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2),
             A.HueSaturationValue(hue_shift_limit=5, sat_shift_limit=30, val_shift_limit=5),
-            A.RandomChannelDrop(p=0.5),
+            RandomChannelDrop(p=0.5),
             A.ToFloat()
         ])
     elif transform_variant == 'distortions_color_drop_02':
@@ -237,7 +237,7 @@ def get_transforms(transform_variant, out_size):
             A.CLAHE(),
             A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2),
             A.HueSaturationValue(hue_shift_limit=5, sat_shift_limit=30, val_shift_limit=5),
-            A.RandomChannelDrop(p=0.2),
+            RandomChannelDrop(p=0.2),
             A.ToFloat()
         ])
     elif transform_variant == 'distortions_scale05_1':
