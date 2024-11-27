@@ -208,7 +208,7 @@ def get_transforms(transform_variant, out_size):
             A.HueSaturationValue(hue_shift_limit=5, sat_shift_limit=30, val_shift_limit=5),
             A.ToFloat()
         ])
-    elif transform_variant == 'distortions_color_drop_0.5':
+    elif transform_variant == 'distortions_color_drop_05':
         transform = A.Compose([
             IAAPerspective2(scale=(0.0, 0.06)),
             IAAAffine2(scale=(0.7, 1.3),
@@ -224,7 +224,7 @@ def get_transforms(transform_variant, out_size):
             A.RandomChannelDrop(p=0.5),
             A.ToFloat()
         ])
-    elif transform_variant == 'distortions_color_drop_0.2':
+    elif transform_variant == 'distortions_color_drop_02':
         transform = A.Compose([
             IAAPerspective2(scale=(0.0, 0.06)),
             IAAAffine2(scale=(0.7, 1.3),
