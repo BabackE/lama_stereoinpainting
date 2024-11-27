@@ -55,8 +55,17 @@ def load_depth_from_hdf5(hdf5_path, depth_path, return_orig=False):
         depth_map_u16 = dataset[:]
         
         # Retrieve mean and std attributes
-        depth_map_min = dataset.attrs['min']
-        depth_map_range = dataset.attrs['range']
+        if 'min' in dataset.attrs:
+            depth_map_min = dataset.attrs['min']
+        else:
+            LOGGER.warning(f"Attribute 'min' not found in dataset {depth_path}")
+            depth_map_min = 4.1578239029840205 # average min of the dataset
+                
+        if 'range' in dataset.attrs:
+            depth_map_range = dataset.attrs['range']
+        else:
+            LOGGER.warning(f"Attribute 'range' not found in dataset {depth_path}")
+            depth_map_range = 519.2757145688164 # average range of the dataset
         
         # Convert uint16 back to normalized float
         divisor = 65535.0 if depth_map_u16.dtype == np.uint16 else 255.0 
