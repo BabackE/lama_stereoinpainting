@@ -199,7 +199,6 @@ class RGB565DInpaintingTrainWithHdf5Dataset(Dataset):
         # TODO: is it fine to transform depth as a mask 
         transform_result = self.transform(image=img, mask=depth)
         img = transform_result['image']
-        mask = self.mask_generator(img, iter_i=self.iter_i)
 
         # convert transformed RGB image into BGR565
         img_u8 = (img * 255.0).astype('uint8')
@@ -214,6 +213,7 @@ class RGB565DInpaintingTrainWithHdf5Dataset(Dataset):
         img_out[:,:,2] = depth
 
         img_out = np.transpose(img_out, (2, 0, 1))
+        mask = self.mask_generator(img_out, iter_i=self.iter_i)
 
         self.iter_i += 1
         return dict(image=img_out,
