@@ -281,8 +281,17 @@ class BaseInpaintingTrainingModule(ptl.LightningModule):
 
     def store_discr_outputs(self, batch):
         out_size = batch['image'].shape[2:]
-        discr_real_out, _ = self.discriminator(batch['image'])
-        discr_fake_out, _ = self.discriminator(batch['predicted_image'])
+
+        depth_in_output = ('predicted_depth' in batch.keys())
+        if depth_in_output:
+            predicted = torch.cat((batch['predicted_image'], batch['predicted_depth']), dim=1)
+            target = torch.cat((batch['image'], batch['depth']), dim=1)
+        else:
+            predicted = batch['predicted_image']
+            target = batch['image']
+
+        discr_real_out, _ = self.discriminator(target)
+        discr_fake_out, _ = self.discriminator(predicted)
         batch['discr_output_real'] = F.interpolate(discr_real_out, size=out_size, mode='nearest')
         batch['discr_output_fake'] = F.interpolate(discr_fake_out, size=out_size, mode='nearest')
         batch['discr_output_diff'] = batch['discr_output_real'] - batch['discr_output_fake']
