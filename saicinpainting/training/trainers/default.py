@@ -76,15 +76,27 @@ class DefaultInpaintingTrainingModule(BaseInpaintingTrainingModule):
             masked_depth = depth * (1 - mask)
             masked_img = torch.cat([masked_img, masked_depth], dim=1)
 
-        batch['predicted_image'] = self.generator(masked_img)
+        predicted = self.generator(masked_img)
+
+        if predicted.shape[1] == 4:
+            batch['predicted_image'] = predicted[:, :3, :, :]
+            batch['predicted_depth'] = predicted[:, 3, :, :]
+            target = torch.cat([img, batch['depth']], dim=1)
+        else:
+            batch['predicted_image'] = predicted
+            target = img
+
         batch['inpainted'] = mask * batch['predicted_image'] + (1 - mask) * batch['image']
+
+        if predicted.shape[1] == 4:
+            batch['inpainted_depth'] = mask * batch['predicted_depth'] + (1 - mask) * batch['depth']
 
         if self.fake_fakes_proba > 1e-3:
             if self.training and torch.rand(1).item() < self.fake_fakes_proba:
-                batch['fake_fakes'], batch['fake_fakes_masks'] = self.fake_fakes_gen(img, mask)
+                batch['fake_fakes'], batch['fake_fakes_masks'] = self.fake_fakes_gen(target, mask)
                 batch['use_fake_fakes'] = True
             else:
-                batch['fake_fakes'] = torch.zeros_like(img)
+                batch['fake_fakes'] = torch.zeros_like(target)
                 batch['fake_fakes_masks'] = torch.zeros_like(mask)
                 batch['use_fake_fakes'] = False
 
@@ -99,9 +111,17 @@ class DefaultInpaintingTrainingModule(BaseInpaintingTrainingModule):
         predicted_img = batch[self.image_to_discriminator]
         original_mask = batch['mask']
         supervised_mask = batch['mask_for_losses']
+        depth_in_output = ('predicted_depth' in batch.keys())
+
+        if depth_in_output:
+            predicted = torch.cat((predicted_img, batch['predicted_depth']), dim=1)
+            target = torch.cat((img, batch['depth']), dim=1)
+        else:
+            predicted = predicted_img
+            target = img
 
         # L1
-        l1_value = masked_l1_loss(predicted_img, img, supervised_mask,
+        l1_value = masked_l1_loss(predicted, target, supervised_mask,
                                   self.config.losses.l1.weight_known,
                                   self.config.losses.l1.weight_missing)
 
@@ -117,12 +137,12 @@ class DefaultInpaintingTrainingModule(BaseInpaintingTrainingModule):
         # discriminator
         # adversarial_loss calls backward by itself
         mask_for_discr = supervised_mask if self.distance_weighted_mask_for_discr else original_mask
-        self.adversarial_loss.pre_generator_step(real_batch=img, fake_batch=predicted_img,
+        self.adversarial_loss.pre_generator_step(real_batch=target, fake_batch=predicted,
                                                  generator=self.generator, discriminator=self.discriminator)
-        discr_real_pred, discr_real_features = self.discriminator(img)
-        discr_fake_pred, discr_fake_features = self.discriminator(predicted_img)
-        adv_gen_loss, adv_metrics = self.adversarial_loss.generator_loss(real_batch=img,
-                                                                         fake_batch=predicted_img,
+        discr_real_pred, discr_real_features = self.discriminator(target)
+        discr_fake_pred, discr_fake_features = self.discriminator(predicted)
+        adv_gen_loss, adv_metrics = self.adversarial_loss.generator_loss(real_batch=target,
+                                                                         fake_batch=predicted,
                                                                          discr_real_pred=discr_real_pred,
                                                                          discr_fake_pred=discr_fake_pred,
                                                                          mask=mask_for_discr)
@@ -150,13 +170,21 @@ class DefaultInpaintingTrainingModule(BaseInpaintingTrainingModule):
         total_loss = 0
         metrics = {}
 
-        predicted_img = batch[self.image_to_discriminator].detach()
-        self.adversarial_loss.pre_discriminator_step(real_batch=batch['image'], fake_batch=predicted_img,
+        depth_in_output = ('predicted_depth' in batch.keys())
+
+        if depth_in_output:
+            predicted = torch.cat((batch['predicted_image'].detach(), batch['predicted_depth'].detach()), dim=1)
+            target = torch.cat((batch['img'], batch['depth']), dim=1)
+        else:
+            predicted = batch['predicted_image'].detach()
+            target = batch['img']
+
+        self.adversarial_loss.pre_discriminator_step(real_batch=target, fake_batch=predicted,
                                                      generator=self.generator, discriminator=self.discriminator)
-        discr_real_pred, discr_real_features = self.discriminator(batch['image'])
-        discr_fake_pred, discr_fake_features = self.discriminator(predicted_img)
-        adv_discr_loss, adv_metrics = self.adversarial_loss.discriminator_loss(real_batch=batch['image'],
-                                                                               fake_batch=predicted_img,
+        discr_real_pred, discr_real_features = self.discriminator(target)
+        discr_fake_pred, discr_fake_features = self.discriminator(predicted)
+        adv_discr_loss, adv_metrics = self.adversarial_loss.discriminator_loss(real_batch=target,
+                                                                               fake_batch=predicted,
                                                                                discr_real_pred=discr_real_pred,
                                                                                discr_fake_pred=discr_fake_pred,
                                                                                mask=batch['mask'])
@@ -167,11 +195,11 @@ class DefaultInpaintingTrainingModule(BaseInpaintingTrainingModule):
 
         if batch.get('use_fake_fakes', False):
             fake_fakes = batch['fake_fakes']
-            self.adversarial_loss.pre_discriminator_step(real_batch=batch['image'], fake_batch=fake_fakes,
+            self.adversarial_loss.pre_discriminator_step(real_batch=target, fake_batch=fake_fakes,
                                                          generator=self.generator, discriminator=self.discriminator)
             discr_fake_fakes_pred, _ = self.discriminator(fake_fakes)
             fake_fakes_adv_discr_loss, fake_fakes_adv_metrics = self.adversarial_loss.discriminator_loss(
-                real_batch=batch['image'],
+                real_batch=target,
                 fake_batch=fake_fakes,
                 discr_real_pred=discr_real_pred,
                 discr_fake_pred=discr_fake_fakes_pred,
