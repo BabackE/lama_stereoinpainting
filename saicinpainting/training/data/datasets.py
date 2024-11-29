@@ -172,6 +172,46 @@ class DepthInpaintingTrainWithHdf5Dataset(Dataset):
                     mask=mask,
                     depth=depth)
 
+class RGB565DInpaintingTrainWithHdf5Dataset(Dataset):
+    def __init__(self, indir, hdf5_path, mask_generator, transform):
+        self.in_files = list(glob.glob(os.path.join(indir, '**', '*.jpg'), recursive=True))
+        self.hdf5_path = hdf5_path
+        
+        # TODO note:
+        # read self.in_files and create equivalent depth path inside the hdf5 file that we'll look up in load_depth_from_hdf5
+
+        self.depth_files = [path.split(indir,1)[1].replace("\\","/").removesuffix(".jpg") for path in self.in_files]
+        self.mask_generator = mask_generator
+        self.transform = transform
+        self.iter_i = 0
+        LOGGER.info(f"RGB565D DEPTH DATALOADER WITH {len(self.in_files)} in {self.hdf5_path}")
+
+    def __len__(self):
+        return len(self.in_files)
+
+    def __getitem__(self, item):
+        path = self.in_files[item]
+        
+        bgr = cv2.imread(path)
+        dual_channel_bgr = cv2.cvtColor(bgr, cv2.COLOR_BGR2BGR565)
+
+        depth = load_depth_from_hdf5(self.hdf5_path, self.depth_files[item])
+        depth_u8 = (depth * 255).astype(np.uint8)
+
+        img = np.zeros_like(bgr)
+        img[:,:,0] = dual_channel_bgr[:,:,0]
+        img[:,:,1] = dual_channel_bgr[:,:,1]
+        img[:,:,2] = depth_u8
+
+        # TODO: is it fine to transform depth as a mask 
+        transform_result = self.transform(image=img, mask=depth)
+        img = transform_result['image']
+        img = np.transpose(img, (2, 0, 1))
+        mask = self.mask_generator(img, iter_i=self.iter_i)
+        self.iter_i += 1
+        return dict(image=img,
+                    mask=mask)
+
 class RandomChannelDrop(A.core.transforms_interface.ImageOnlyTransform):
     def __init__(self, always_apply=False, p=0.5):
         super(RandomChannelDrop, self).__init__(always_apply, p)
@@ -180,6 +220,7 @@ class RandomChannelDrop(A.core.transforms_interface.ImageOnlyTransform):
         channel_to_drop = random.randint(0, 2)
         image[:, :, channel_to_drop] = 0
         return image
+    
 
 def get_transforms(transform_variant, out_size):
     if transform_variant == 'default':
@@ -354,6 +395,12 @@ def make_default_train_dataloader(indir, depth_datadir=None, hdf5_path=None, kin
                                          mask_generator=mask_generator,
                                          transform=transform,
                                          **kwargs)          
+    elif kind == "rgb565d_with_depth_hdf5" and hdf5_path is not None:
+        dataset = RGB565DInpaintingTrainWithHdf5Dataset(indir=indir,
+                                         hdf5_path=hdf5_path,
+                                         mask_generator=mask_generator,
+                                         transform=transform,
+                                         **kwargs)
     else:
         raise ValueError(f'Unknown train dataset kind {kind}')
 
