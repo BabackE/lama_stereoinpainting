@@ -176,10 +176,10 @@ class DefaultInpaintingTrainingModule(BaseInpaintingTrainingModule):
 
         if depth_in_output:
             predicted = torch.cat((batch['predicted_image'].detach(), batch['predicted_depth'].detach()), dim=1)
-            target = torch.cat((batch['img'], batch['depth']), dim=1)
+            target = torch.cat((batch['image'], batch['depth']), dim=1)
         else:
             predicted = batch['predicted_image'].detach()
-            target = batch['img']
+            target = batch['image']
 
         self.adversarial_loss.pre_discriminator_step(real_batch=target, fake_batch=predicted,
                                                      generator=self.generator, discriminator=self.discriminator)
