@@ -25,8 +25,12 @@ def load_image(fname, mode='RGB', return_orig=False):
 
 def load_depth_from_file(fname, return_orig=False):
     depth = np.load(fname)
-    # TODO: How to normalize depth maps
-    out_depth = depth / np.max(depth)
+    # divisor = 65535.0 if depth.dtype == np.uint16 else 255.0 
+    # depth_map_range = 519.2757145688164
+    # depth_map_min = 4.1578239029840205
+    # out_depth = depth.astype(np.float32) / divisor
+    # out_depth = out_depth * depth_map_range + depth_map_min
+    out_depth = depth.astype(np.float32)
     if return_orig:
         return out_depth, depth
     else:

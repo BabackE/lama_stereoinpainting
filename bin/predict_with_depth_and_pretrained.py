@@ -30,7 +30,7 @@ from omegaconf import OmegaConf
 from torch.utils.data._utils.collate import default_collate
 
 from saicinpainting.training.data.datasets import make_default_val_dataset
-from saicinpainting.training.trainers import load_4c_checkpoint_for_5c
+from saicinpainting.training.trainers import load_checkpoint
 from saicinpainting.utils import register_debug_signal_handlers
 
 LOGGER = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ def main(predict_config: OmegaConf):
         checkpoint_path = os.path.join(predict_config.model.path, 
                                        'models', 
                                        predict_config.model.checkpoint)
-        model = load_4c_checkpoint_for_5c(train_config, checkpoint_path, strict=False, map_location='cpu')
+        model = load_checkpoint(train_config, checkpoint_path, strict=False, map_location='cpu')
         model.freeze()
         if not predict_config.get('refine', False):
             model.to(device)
@@ -85,7 +85,7 @@ def main(predict_config: OmegaConf):
             else:
                 with torch.no_grad():
                     batch = move_to_device(batch, device)
-                    batch['mask'] = (batch['mask'] > 0) * 1
+                    batch['mask'] = (batch['mask'] > 0.1) * 1
                     batch = model(batch)                    
                     cur_res = batch[predict_config.out_key][0].permute(1, 2, 0).detach().cpu().numpy()
                     unpad_to_size = batch.get('unpad_to_size', None)
