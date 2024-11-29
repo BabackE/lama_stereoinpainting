@@ -59,8 +59,17 @@ def load_depth_from_hdf5(hdf5_path, depth_path, return_orig=False):
         depth_map_u16 = dataset[:]
         
         # Retrieve mean and std attributes
-        depth_map_min = dataset.attrs['min']
-        depth_map_range = dataset.attrs['range']
+        if 'min' in dataset.attrs:
+            depth_map_min = dataset.attrs['min']
+        else:
+            LOGGER.warning(f"Attribute 'min' not found in dataset {depth_path}")
+            depth_map_min = 4.1578239029840205 # average min of the dataset
+                
+        if 'range' in dataset.attrs:
+            depth_map_range = dataset.attrs['range']
+        else:
+            LOGGER.warning(f"Attribute 'range' not found in dataset {depth_path}")
+            depth_map_range = 519.2757145688164 # average range of the dataset
         
         # Convert uint16 back to normalized float
         divisor = 65535.0 if depth_map_u16.dtype == np.uint16 else 255.0 
@@ -234,6 +243,53 @@ class DepthInpaintingEvaluationWithHdf5Dataset(Dataset):
 
         #LOGGER.info(f"Index {i}: img shape {result['image'].shape}, mask shape {result['mask'].shape}, depth shape {result['depth'].shape}")
         return result
+
+
+class RGB565DInpaintingEvaluationWithHdf5Dataset(Dataset):
+    def __init__(self, img_datadir, hdf5_path, img_suffix='.jpg', pad_out_to_modulo=None, scale_factor=None):
+        self.img_datadir = img_datadir
+        self.hdf5_path = hdf5_path
+        self.mask_filenames = sorted(list(glob.glob(os.path.join(self.img_datadir, '**', '*mask*.*'), recursive=True)))
+        self.img_filenames = [fname.rsplit('_mask', 1)[0] + img_suffix for fname in self.mask_filenames]
+        depth_root = "val" if "/val" in img_datadir else "visual_test"
+        self.depth_paths = [path.replace(img_datadir, depth_root).replace("\\","/").removesuffix(img_suffix) for path in self.img_filenames]
+        self.pad_out_to_modulo = pad_out_to_modulo
+        self.scale_factor = scale_factor
+        LOGGER.info(f"EVALUATION RGB565D DEPTH DATALOADER WITH {len(self.img_filenames)} in {self.hdf5_path}")
+
+    def __len__(self):
+        return len(self.mask_filenames)
+
+    def __getitem__(self, i):
+        mask = load_image(self.mask_filenames[i], mode='L')
+        bgr = cv2.imread(self.img_filenames[i])
+        dual_channel_bgr = cv2.cvtColor(bgr, cv2.COLOR_BGR2BGR565)
+
+        depth = load_depth_from_hdf5(self.hdf5_path, self.depth_paths[i])
+        depth_u8 = (depth * 255).astype(np.uint8)
+
+        img = np.zeros_like(bgr)
+        img[:,:,0] = dual_channel_bgr[:,:,0]
+        img[:,:,1] = dual_channel_bgr[:,:,1]
+        img[:,:,2] = depth_u8
+
+        img = np.transpose(img, (2, 0, 1))
+        img = img.astype('float32') / 255
+
+        result = dict(image=img, mask=mask[None, ...])
+
+        if self.scale_factor is not None:
+            result['image'] = scale_image(result['image'], self.scale_factor)
+            result['mask'] = scale_image(result['mask'], self.scale_factor, interpolation=cv2.INTER_NEAREST)
+
+        if self.pad_out_to_modulo is not None and self.pad_out_to_modulo > 1:
+            result['unpad_to_size'] = result['image'].shape[1:]
+            result['image'] = pad_img_to_modulo(result['image'], self.pad_out_to_modulo)
+            result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
+
+        #LOGGER.info(f"Index {i}: img shape {result['image'].shape}, mask shape {result['mask'].shape}, depth shape {result['depth'].shape}")
+        return result
+
 
 class PrecomputedInpaintingResultsDataset(InpaintingDataset):
     def __init__(self, datadir, predictdir, inpainted_suffix='_inpainted.jpg', **kwargs):

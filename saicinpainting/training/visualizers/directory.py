@@ -30,7 +30,7 @@ class DirectoryVisualizer(BaseVisualizer):
         curoutdir = os.path.join(self.outdir, f'epoch{epoch_i:04d}{suffix}')
         os.makedirs(curoutdir, exist_ok=True)
         rank_suffix = f'_r{rank}' if rank is not None else ''
-        out_fname = os.path.join(curoutdir, f'batch{batch_i:07d}{rank_suffix}.jpg')
+        out_fname = os.path.join(curoutdir, f'batch{batch_i:07d}{rank_suffix}.png')
 
         vis_img = cv2.cvtColor(vis_img, cv2.COLOR_RGB2BGR)
         cv2.imwrite(out_fname, vis_img)

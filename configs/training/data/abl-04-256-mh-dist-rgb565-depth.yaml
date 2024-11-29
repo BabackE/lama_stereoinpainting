@@ -5,7 +5,7 @@ val_batch_size: 2
 num_workers: 3
 
 train:
-  kind: img_with_depth_hdf5
+  kind: rgb565d_with_depth_hdf5
   indir: ${location.data_root_dir}/train
   hdf5_path: /home/user/lama/places_depth/train_large_places365standard_disparity_u8.hdf5
   out_size: 256
@@ -35,7 +35,7 @@ train:
     num_workers: ${data.num_workers}
 
 val:
-  kind: img_with_depth_hdf5
+  kind: rgb565d_with_depth_hdf5
   indir: ${location.data_root_dir}/val
   hdf5_path: /home/user/lama/places_depth/val_large_places365standard_disparity_u8.hdf5
   img_suffix: .png
@@ -45,7 +45,7 @@ val:
     num_workers: ${data.num_workers}
 
 visual_test:
-  kind: img_with_depth_hdf5
+  kind: rgb565d_with_depth_hdf5
   indir: ${location.data_root_dir}/visual_test
   hdf5_path: /home/user/lama/places_depth/val_large_places365standard_disparity_u8.hdf5
   img_suffix: .png
