@@ -16,7 +16,7 @@ from torch.utils.data import Dataset, IterableDataset, DataLoader, DistributedSa
 
 from saicinpainting.evaluation.data import InpaintingDataset as InpaintingEvaluationDataset, \
     OurInpaintingDataset as OurInpaintingEvaluationDataset, ceil_modulo, InpaintingEvalOnlineDataset, \
-    DepthInpaintingEvaluationDataset, DepthInpaintingEvaluationWithHdf5Dataset, \
+    DepthInpaintingEvaluationDataset, DepthInpaintingEvaluationWithHdf5Dataset, RGB565DInpaintingEvaluationWithHdf5Dataset, \
     load_depth_from_file, load_depth_from_hdf5
 from saicinpainting.training.data.aug import IAAAffine2, IAAPerspective2
 from saicinpainting.training.data.masks import get_mask_generator
@@ -461,6 +461,8 @@ def make_default_val_dataset(indir, depth_datadir=None, hdf5_path=None, kind='de
         dataset = DepthInpaintingEvaluationDataset(indir, depth_datadir, **kwargs)
     elif kind == 'img_with_depth_hdf5' and hdf5_path is not None:
         dataset = DepthInpaintingEvaluationWithHdf5Dataset(indir, hdf5_path, **kwargs)
+    elif kimnd == "rgb565d_with_depth_hdf5" and hdf5_path is not None:
+        dataset = RGB565DInpaintingEvaluationWithHdf5Dataset(indir, hdf5_path, **kwargs)
     else:
         raise ValueError(f'Unknown val dataset kind {kind}')
 
