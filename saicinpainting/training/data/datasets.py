@@ -207,10 +207,13 @@ class RGB565DInpaintingTrainWithHdf5Dataset(Dataset):
         dual_channel_bgrf = dual_channel_bgr.astype('float32')/255.0
 
         # add depth as a third channel
+        transformed_depth = transform_result['mask']
+        transformed_depth = transformed_depth.astype('float32')
+
         img_out = np.zeros_like(img).astype('float32')
         img_out[:,:,0] = dual_channel_bgrf[:,:,0]
         img_out[:,:,1] = dual_channel_bgrf[:,:,1]
-        img_out[:,:,2] = transform_result["depth"]
+        img_out[:,:,2] = transformed_depth
 
         img_out = np.transpose(img_out, (2, 0, 1))
         mask = self.mask_generator(img_out, iter_i=self.iter_i)
