@@ -192,24 +192,31 @@ class RGB565DInpaintingTrainWithHdf5Dataset(Dataset):
     def __getitem__(self, item):
         path = self.in_files[item]
         
-        bgr = cv2.imread(path)
-        dual_channel_bgr = cv2.cvtColor(bgr, cv2.COLOR_BGR2BGR565)
-
+        img = cv2.imread(path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         depth = load_depth_from_hdf5(self.hdf5_path, self.depth_files[item])
-        depth_u8 = (depth * 255).astype(np.uint8)
-
-        img = np.zeros_like(bgr)
-        img[:,:,0] = dual_channel_bgr[:,:,0]
-        img[:,:,1] = dual_channel_bgr[:,:,1]
-        img[:,:,2] = depth_u8
 
         # TODO: is it fine to transform depth as a mask 
         transform_result = self.transform(image=img, mask=depth)
         img = transform_result['image']
-        img = np.transpose(img, (2, 0, 1))
         mask = self.mask_generator(img, iter_i=self.iter_i)
+
+        # convert transformed RGB image into BGR565
+        img_u8 = (img * 255.0).astype('uint8')
+        bgr = cv2.cvtColor(img_u8, cv2.COLOR_RGB2BGR)
+        dual_channel_bgr = cv2.cvtColor(bgr, cv2.COLOR_BGR2BGR565)
+        dual_channel_bgrf = dual_channel_bgr.astype('float32')/255.0
+
+        # add depth as a third channel
+        img_out = np.zeros_like(img).astype('float32')
+        img_out[:,:,0] = dual_channel_bgrf[:,:,0]
+        img_out[:,:,1] = dual_channel_bgrf[:,:,1]
+        img_out[:,:,2] = depth
+
+        img_out = np.transpose(img_out, (2, 0, 1))
+
         self.iter_i += 1
-        return dict(image=img,
+        return dict(image=img_out,
                     mask=mask)
 
 class RandomChannelDrop(A.core.transforms_interface.ImageOnlyTransform):
