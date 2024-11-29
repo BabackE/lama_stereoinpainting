@@ -461,7 +461,7 @@ def make_default_val_dataset(indir, depth_datadir=None, hdf5_path=None, kind='de
         dataset = DepthInpaintingEvaluationDataset(indir, depth_datadir, **kwargs)
     elif kind == 'img_with_depth_hdf5' and hdf5_path is not None:
         dataset = DepthInpaintingEvaluationWithHdf5Dataset(indir, hdf5_path, **kwargs)
-    elif kimnd == "rgb565d_with_depth_hdf5" and hdf5_path is not None:
+    elif kind == "rgb565d_with_depth_hdf5" and hdf5_path is not None:
         dataset = RGB565DInpaintingEvaluationWithHdf5Dataset(indir, hdf5_path, **kwargs)
     else:
         raise ValueError(f'Unknown val dataset kind {kind}')
