@@ -251,7 +251,7 @@ class RGB565DInpaintingEvaluationWithHdf5Dataset(Dataset):
         self.depth_paths = [path.replace(img_datadir, depth_root).replace("\\","/").removesuffix(img_suffix) for path in self.img_filenames]
         self.pad_out_to_modulo = pad_out_to_modulo
         self.scale_factor = scale_factor
-        LOGGER.info(f"EVALUATION RGB565D DEPTH DATALOADER WITH {len(self.in_files)} in {self.hdf5_path}")
+        LOGGER.info(f"EVALUATION RGB565D DEPTH DATALOADER WITH {len(self.img_filenames)} in {self.hdf5_path}")
 
     def __len__(self):
         return len(self.mask_filenames)
