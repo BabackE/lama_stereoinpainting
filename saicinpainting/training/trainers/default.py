@@ -114,8 +114,8 @@ class DefaultInpaintingTrainingModule(BaseInpaintingTrainingModule):
         depth_in_output = ('predicted_depth' in batch.keys())
 
         if depth_in_output:
-            LOGGER.info(f'predicted_img shape: {predicted_img.shape}')
-            LOGGER.info(f'predicted_depth shape: {batch['predicted_depth'].shape}')
+            LOGGER.info(f"predicted_img shape: {predicted_img.shape}")
+            LOGGER.info(f"predicted_depth shape: {batch['predicted_depth'].shape}")
             predicted = torch.cat((predicted_img, batch['predicted_depth']), dim=1)
             target = torch.cat((img, batch['depth']), dim=1)
         else:
