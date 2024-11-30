@@ -1,0 +1,37 @@
+run_title: ''
+
+checkpoint_path: no
+
+training_model:
+  kind: default
+  visualize_each_iters: 1000
+  concat_mask: true
+  store_discr_outputs_for_vis: true
+losses:
+  l1:
+    weight_missing: 0
+    weight_known: 10
+  perceptual:
+    weight: 0
+  adversarial:
+    kind: r1
+    weight: 10
+    gp_coef: 0.001
+    mask_as_fake_target: true
+    allow_scale_mask: true
+  feature_matching:
+    weight: 100
+  resnet_pl:
+    weight: 30
+    weights_path: ${env:TORCH_HOME}
+
+defaults:
+  - location: places_example
+  - data: abl-04-256-mh-dist-depth
+  - generator: ffc_resnet_075_depth_4output
+  - discriminator: pix2pixhd_nlayer_depth_4output
+  - optimizers: default_optimizers
+  - visualizer: directory_depth
+  - evaluator: default_inpainted
+  - trainer: any_gpu_large_ssim_ddp_final
+  - hydra: overrides

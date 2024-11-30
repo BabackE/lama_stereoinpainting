@@ -21,6 +21,29 @@ def make_training_model(config):
     cls = get_training_model_class(kind)
     return cls(config, **kwargs)
 
+def make_4output_from_3output(config, path, map_location='cuda'):
+    kind = config.training_model.kind
+    kwargs = dict(config.training_model)
+    kwargs.pop('kind')
+    kwargs['use_ddp'] = config.trainer.kwargs.get('accelerator', None) == 'ddp'
+
+    logging.info(f'Make 4 output training model {kind} from 3 output model in {path}')
+
+    cls = get_training_model_class(kind)
+    model: torch.nn.Module = cls(config, **kwargs)
+
+    state = torch.load(path, map_location=map_location)
+
+    state['state_dict'].pop('generator.model.25.weight', None)
+    state['state_dict'].pop('generator.model.25.bias', None)
+    state['state_dict'].pop('discriminator.model0.0.weight', None)
+    state['state_dict'].pop('discriminator.model0.0.bias', None)
+
+    model.load_state_dict(state['state_dict'], strict=False)
+
+    return model
+    
+
 
 def load_checkpoint(train_config, path, map_location='cuda', strict=True):
     model: torch.nn.Module = make_training_model(train_config)
