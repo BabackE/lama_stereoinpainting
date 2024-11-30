@@ -4,7 +4,7 @@ checkpoint_path: no
 
 training_model:
   kind: default
-  visualize_each_iters: 1000
+  visualize_each_iters: 500
   concat_mask: true
   store_discr_outputs_for_vis: true
 losses:
