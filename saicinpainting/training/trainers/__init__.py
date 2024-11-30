@@ -34,10 +34,41 @@ def make_4output_from_3output(config, path, map_location='cuda'):
 
     state = torch.load(path, map_location=map_location)
 
-    state['state_dict'].pop('generator.model.25.weight', None)
-    state['state_dict'].pop('generator.model.25.bias', None)
-    state['state_dict'].pop('discriminator.model0.0.weight', None)
-    state['state_dict'].pop('discriminator.model0.0.bias', None)
+    keys = 'discriminator.model0.0.weight \
+    discriminator.model0.0.bias \
+    discriminator.model1.0.weight \
+    discriminator.model1.0.bias \
+    discriminator.model1.1.weight \
+    discriminator.model1.1.bias \
+    discriminator.model1.1.running_mean \
+    discriminator.model1.1.running_var \
+    discriminator.model1.1.num_batches_tracked \
+    generator.model.15.weight \
+    generator.model.15.bias \
+    generator.model.16.weight \
+    generator.model.16.bias \
+    generator.model.16.running_mean \
+    generator.model.16.running_var \
+    generator.model.16.num_batches_tracked \
+    generator.model.18.weight \
+    generator.model.18.bias \
+    generator.model.19.weight \
+    generator.model.19.bias \
+    generator.model.19.running_mean \
+    generator.model.19.running_var \
+    generator.model.19.num_batches_tracked \
+    generator.model.21.weight \
+    generator.model.21.bias \
+    generator.model.22.weight \
+    generator.model.22.bias \
+    generator.model.22.running_mean \
+    generator.model.22.running_var \
+    generator.model.22.num_batches_tracked \
+    generator.model.25.weight \
+    generator.model.25.bias'.split(' ')
+
+    for key in keys:
+        state['state_dict'].pop(key, None)
 
     model.load_state_dict(state['state_dict'], strict=False)
 
